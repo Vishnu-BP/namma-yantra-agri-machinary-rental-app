@@ -1,50 +1,65 @@
-# Welcome to your Expo app 👋
+# Namma-Yantra Share
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Peer-to-peer farm machinery rental marketplace for Karnataka — "Uber for Tractors." Bilingual (English + Kannada), built for small farmers with limited literacy.
 
-## Get started
+> **Status:** Layer 0 (project skeleton). See [`tasks/todo.md`](tasks/todo.md) for the current build phase. The 8-layer build plan is in [`docs/`](docs/).
 
-1. Install dependencies
+## Stack
 
-   ```bash
-   npm install
-   ```
+- **Frontend:** React Native + Expo SDK 54, expo-router, TypeScript (strict), NativeWind v4, Zustand, TanStack Query, React Hook Form + Zod
+- **Backend:** Supabase (Postgres + Auth + Realtime + Storage + Edge Functions)
+- **AI:** Groq (`llama-3.3-70b-versatile` text, `llama-3.2-90b-vision-preview` vision) — added in Layer 6
+- **Build:** EAS Build for Android APK — Layer 7
 
-2. Start the app
+## Setup
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+Prerequisites: Node 20+, Expo Go v54 on a physical Android device (or Android emulator).
 
 ```bash
-npm run reset-project
+# 1. Install deps
+npm install
+
+# 2. Fill in Supabase credentials
+cp .env.example .env
+# Edit .env with EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
+
+# 3. Link the Supabase CLI to your project
+npx supabase link --project-ref <your-project-ref>
+
+# 4. Run the app
+npx expo start --tunnel    # tunnel mode if LAN doesn't reach your phone
+# or
+npx expo start --android   # emulator on the same machine
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Open the QR code in Expo Go v54.
 
-## Learn more
+## Useful scripts
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm run start         # Expo dev server
+npm run android       # Dev server with Android device target
+npm run typecheck     # tsc --noEmit
+npm run lint          # ESLint (Expo flat config)
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Reference docs
 
-## Join the community
+- [`CLAUDE.md`](CLAUDE.md) — coding conventions and architecture rules (the bible).
+- [`docs/00-overview.md`](docs/00-overview.md) → [`docs/10-claude-code-tactical.md`](docs/10-claude-code-tactical.md) — full PRD split by build layer.
+- [`PLAN.md`](PLAN.md) — full 8-layer roadmap.
+- [`PLAN-L0.md`](PLAN-L0.md) — current layer plan.
+- [`tasks/todo.md`](tasks/todo.md) — current layer checklist + completed work log.
 
-Join our community of developers creating universal apps.
+## Project conventions (excerpt — see CLAUDE.md for the full list)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Direct `supabase-js` only — no ORM.
+- All money values stored as integer paise (₹1 = 100 paise).
+- Booking time windows use Postgres `tstzrange` with an `EXCLUDE` constraint to make double-booking structurally impossible.
+- Real-time availability via Supabase Postgres Changes broadcast on a single column.
+- Path alias `@/*` → `./src/*` everywhere; no `../..` imports.
+- Tagged logger only — no raw `console.log`.
+
+## License
+
+Private — internship project (MindMatrix VTU).
