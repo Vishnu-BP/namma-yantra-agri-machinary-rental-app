@@ -23,6 +23,10 @@ module.exports = function (api) {
           extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
         },
       ],
+      // Why: Reanimated v4 (and gesture-handler, which expo-router pulls in)
+      // requires the worklets babel plugin to compile worklet functions.
+      // MUST be the last plugin in the array.
+      'react-native-worklets/plugin',
     ],
   };
 };

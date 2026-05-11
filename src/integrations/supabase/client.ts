@@ -37,6 +37,14 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     // Why: detectSessionInUrl is a web/oauth concern; RN never sees session in URL.
+    // We also handle the web OAuth callback ourselves in app/auth/callback.tsx, so
+    // we don't want Supabase to auto-parse and double-exchange the code.
     detectSessionInUrl: false,
+    // Why: force PKCE flow on web. Without this, Supabase web defaults to the
+    // implicit flow which returns tokens in the URL #fragment — and expo-router's
+    // useLocalSearchParams only reads the query string, so the callback would miss
+    // them. PKCE returns `?code=...` in the query, which our callback exchanges via
+    // exchangeCodeForSession. PKCE is also the more secure flow for SPAs.
+    flowType: 'pkce',
   },
 });

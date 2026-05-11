@@ -119,6 +119,17 @@ log.debug('Conflict check', { conflicts })  // stripped in production
 
 **Tags:** `AUTH`, `API`, `DB`, `BOOKING`, `MACHINE`, `RT`, `AI`, `STORAGE`, `I18N`, `LOC`, `STORE`, `UI`, `NAV`, `MW`, `PUSH`. **Never log PII or JWTs at any level.** Edge functions use `console.log` prefixed with `[function-name]` for grep.
 
+### Every user action gets logged
+
+The user journey must be reconstructible from the logger output alone. For every screen and feature:
+
+- **Page-mount log** when a route mounts: `useEffect(() => log.info('<Page>: page visited'), [])`. Without this, logs only show what was tapped, not where the user actually was.
+- **Tap log** at the start of every button / pressable handler: `log.info('<Page>: <action> tapped', { ...enums })`. Tap logs go *before* the side-effect runs.
+- **Completion log** after the side-effect resolves: `log.info('<Page>: <action> completed', { ...result })`. A tap log without a completion log indicates the action errored or hung.
+- **Lifecycle transitions** at INFO, not DEBUG — auth state changes, onboarding completion, navigation guard cross-group redirects, app boot. DEBUG is only for fine-grained tracing that should be stripped in production builds.
+
+What NOT to log: keystrokes / per-character typing (noisy + PII), every render, raw values from PII fields (email, OTP digits, full name, phone, village/district names). Log the *shape* of the action — booleans, enums, role identifiers, page names — never the user's input string.
+
 ## Coding Standards
 
 ### Naming

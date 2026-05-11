@@ -2,6 +2,7 @@
   "expo": {
     "name": "Namma-Yantra Share",
     "slug": "namma-yantra",
+    "owner": "vishnu_bp",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -21,17 +22,25 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "permissions": [
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.RECORD_AUDIO"
       ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "output": "single",
+      "favicon": "./assets/images/favicon.jpeg",
+      "name": "Namma-Yantra Share",
+      "shortName": "Namma-Yantra",
+      "description": "Peer-to-peer farm machinery rental for Karnataka",
+      "themeColor": "#B8862C",
+      "backgroundColor": "#FAF6ED"
     },
     "plugins": [
       "expo-router",
@@ -50,8 +59,13 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "22c8d37d-3296-438d-8ca0-bc51dc4d77e7"
+      }
     }
   }
 }
