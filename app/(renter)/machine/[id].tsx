@@ -7,6 +7,7 @@
  * disabled with a "Booking opens in Layer 3" note so the demo is honest
  * about scope.
  */
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import {
@@ -17,6 +18,7 @@ import {
   type LucideIcon,
   MapPin,
   Tractor,
+  User,
   Wheat,
 } from 'lucide-react-native';
 import { useEffect } from 'react';
@@ -24,6 +26,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AvailabilityBadge } from '@/components/machine/AvailabilityBadge';
+import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { useMachine } from '@/hooks/useMachines';
@@ -61,7 +64,7 @@ export default function MachineDetail() {
   if (machineQuery.isLoading) {
     return (
       <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-        <LoadingState subtitle="Loading machine…" />
+        <LoadingState layout="card-detail" />
       </SafeAreaView>
     );
   }
@@ -87,16 +90,21 @@ export default function MachineDetail() {
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
       <ScrollView contentContainerClassName="pb-32">
-        {/* Hero — placeholder image gradient with category icon. L4 swaps in carousel. */}
-        <View className="bg-primary/10 h-48 items-center justify-center">
-          <CategoryIcon size={HERO_ICON_SIZE} color={colors.primary} />
-        </View>
+        {/* Hero — gold gradient with large category icon. L4 swaps in carousel. */}
+        <LinearGradient
+          colors={[colors.primary, colors.primaryDark]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ height: 224, alignItems: 'center', justifyContent: 'center' }}
+        >
+          <CategoryIcon size={HERO_ICON_SIZE} color="rgba(255,255,255,0.9)" />
+        </LinearGradient>
 
         {/* Floating back button (above hero so it sits on the gradient) */}
         <Pressable
           onPress={handleBack}
           hitSlop={12}
-          className="absolute top-3 left-3 bg-surface border border-border rounded-full p-2 min-w-[44px] min-h-[44px] items-center justify-center"
+          className="absolute top-3 left-3 bg-surface border border-border rounded-full p-2 min-w-[44px] min-h-[44px] items-center justify-center shadow-card"
         >
           <ArrowLeft size={20} color={colors.ink} />
         </Pressable>
@@ -105,7 +113,7 @@ export default function MachineDetail() {
         <View className="px-4 pt-4">
           <View className="flex-row items-start justify-between gap-3">
             <View className="flex-1">
-              <Text className="text-ink text-2xl font-semibold">
+              <Text className="text-ink text-2xl font-bold">
                 {machine.title}
               </Text>
               <Text className="text-ink-soft text-sm mt-1">
@@ -138,19 +146,19 @@ export default function MachineDetail() {
           </View>
         ) : null}
 
-        {/* Pricing */}
+        {/* Pricing — elevated cards */}
         <View className="px-4 mt-6">
-          <Text className="text-ink text-base font-semibold mb-2">{t('machine.pricing')}</Text>
+          <Text className="text-ink text-base font-semibold mb-3">{t('machine.pricing')}</Text>
           <View className="flex-row gap-3">
-            <View className="flex-1 bg-surface border border-border rounded-xl p-3">
-              <Text className="text-ink-mute text-xs">{t('machine.hourly')}</Text>
-              <Text className="text-ink text-lg font-semibold mt-1">
+            <View className="flex-1 bg-surfaceElevated border border-border rounded-2xl p-4 shadow-card">
+              <Text className="text-ink-mute text-xs uppercase tracking-wide">{t('machine.hourly')}</Text>
+              <Text className="text-primary text-2xl font-bold mt-1">
                 {formatPaise(machine.hourly_rate_paise)}
               </Text>
             </View>
-            <View className="flex-1 bg-surface border border-border rounded-xl p-3">
-              <Text className="text-ink-mute text-xs">{t('machine.daily')}</Text>
-              <Text className="text-ink text-lg font-semibold mt-1">
+            <View className="flex-1 bg-surfaceElevated border border-border rounded-2xl p-4 shadow-card">
+              <Text className="text-ink-mute text-xs uppercase tracking-wide">{t('machine.daily')}</Text>
+              <Text className="text-primary text-2xl font-bold mt-1">
                 {formatPaise(machine.daily_rate_paise)}
               </Text>
             </View>
@@ -160,42 +168,49 @@ export default function MachineDetail() {
           </Text>
         </View>
 
-        {/* Owner */}
+        {/* Owner — with avatar placeholder */}
         <View className="px-4 mt-6">
-          <Text className="text-ink text-base font-semibold mb-2">{t('machine.owner')}</Text>
-          <View className="bg-surface border border-border rounded-xl p-3">
-            <Text className="text-ink text-base font-medium">
-              {machine.owner_name}
-            </Text>
-            <Text className="text-ink-soft text-sm mt-0.5">
-              {machine.owner_village}
-            </Text>
-            <Text className="text-ink-mute text-xs mt-1">
-              {machine.total_bookings}{' '}
-              {t('machine.rentals', { count: machine.total_bookings })}
-            </Text>
+          <Text className="text-ink text-base font-semibold mb-3">{t('machine.owner')}</Text>
+          <View className="bg-surface border border-border rounded-2xl p-4 shadow-card flex-row items-center gap-3">
+            <View className="w-10 h-10 bg-primary/15 rounded-full items-center justify-center">
+              <User size={20} color={colors.primary} />
+            </View>
+            <View className="flex-1">
+              <Text className="text-ink text-base font-semibold">
+                {machine.owner_name}
+              </Text>
+              <Text className="text-ink-soft text-sm mt-0.5">
+                {machine.owner_village}
+              </Text>
+              <Text className="text-ink-mute text-xs mt-1">
+                {machine.total_bookings}{' '}
+                {t('machine.rentals', { count: machine.total_bookings })}
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
 
-      {/* CTA — routes to booking flow */}
-      <View className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border p-4 pb-6">
-        <Pressable
-          onPress={() => {
-            log.info('Machine detail: request rental tapped', { machineId: machine.id });
-            router.push(
-              `/(renter)/book/${machine.id}` as unknown as Parameters<typeof router.push>[0],
-            );
-          }}
-          disabled={!machine.is_currently_available}
-          className={`rounded-xl py-4 items-center min-h-[44px] justify-center ${
-            machine.is_currently_available ? 'bg-primary' : 'bg-busy'
-          }`}
-        >
-          <Text className="text-white text-base font-semibold">
-            {machine.is_currently_available ? t('machine.requestRental') : t('machine.unavailable')}
-          </Text>
-        </Pressable>
+      {/* CTA — gradient fade above button, routes to booking flow */}
+      <View className="absolute bottom-0 left-0 right-0">
+        <LinearGradient
+          colors={['transparent', colors.surface]}
+          style={{ height: 24 }}
+        />
+        <View className="bg-surface px-4 pb-6 pt-2">
+          <Button
+            label={machine.is_currently_available ? t('machine.requestRental') : t('machine.unavailable')}
+            onPress={() => {
+              log.info('Machine detail: request rental tapped', { machineId: machine.id });
+              router.push(
+                `/(renter)/book/${machine.id}` as unknown as Parameters<typeof router.push>[0],
+              );
+            }}
+            variant={machine.is_currently_available ? 'primary' : 'secondary'}
+            size="lg"
+            disabled={!machine.is_currently_available}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );

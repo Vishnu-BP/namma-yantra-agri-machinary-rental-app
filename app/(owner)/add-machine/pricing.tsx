@@ -17,12 +17,14 @@ import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { MapLocationPicker } from '@/components/machine/MapLocationPicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 
+import { Button } from '@/components/ui/Button';
+import { InputField } from '@/components/ui/InputField';
 import { createLogger } from '@/lib/logger';
 import { rupeesToPaise } from '@/lib/money';
 import { colors } from '@/theme/colors';
@@ -158,61 +160,61 @@ export default function AddMachinePricing() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top', 'bottom']}>
-      {/* Header */}
-      <View className="flex-row items-center gap-3 px-4 pt-4 pb-2">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-10 h-10 items-center justify-center rounded-full bg-surface border border-border"
-        >
-          <ArrowLeft size={18} color={colors.ink} />
-        </Pressable>
-        <View className="flex-1">
-          <Text className="text-ink-mute text-xs">Step 3 of 3</Text>
-          <Text className="text-ink text-lg font-bold">Pricing &amp; location</Text>
+      {/* Header with full progress bar (step 3/3) */}
+      <View className="px-4 pt-4 pb-2">
+        <View className="flex-row gap-1.5 mb-4">
+          {[1, 2, 3].map((s) => (
+            <View key={s} className="flex-1 h-1.5 rounded-full bg-primary" />
+          ))}
+        </View>
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={() => router.back()}
+            className="w-10 h-10 items-center justify-center rounded-full bg-surface border border-border shadow-card"
+          >
+            <ArrowLeft size={18} color={colors.ink} />
+          </Pressable>
+          <Text className="text-ink text-lg font-bold flex-1">Pricing &amp; location</Text>
         </View>
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
 
         {/* Hourly rate */}
-        <Text className="text-ink font-semibold text-sm mb-2">Hourly rate (₹)</Text>
         <Controller
           control={control}
           name="hourlyRupees"
           render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              placeholder="e.g. 400"
-              placeholderTextColor={colors.inkMute}
-              keyboardType="numeric"
+            <InputField
+              label="Hourly rate"
+              prefix="₹"
               value={value ? String(value) : ''}
               onChangeText={(t) => onChange(parseFloat(t) || 0)}
+              placeholder="400"
+              keyboardType="numeric"
+              error={errors.hourlyRupees?.message}
             />
           )}
         />
-        {errors.hourlyRupees && (
-          <Text className="text-error text-xs mb-3">{errors.hourlyRupees.message}</Text>
-        )}
 
         {/* Daily rate */}
-        <Text className="text-ink font-semibold text-sm mb-2">Daily rate (₹)</Text>
-        <Controller
-          control={control}
-          name="dailyRupees"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              placeholder="e.g. 2500"
-              placeholderTextColor={colors.inkMute}
-              keyboardType="numeric"
-              value={value ? String(value) : ''}
-              onChangeText={(t) => onChange(parseFloat(t) || 0)}
-            />
-          )}
-        />
-        {errors.dailyRupees && (
-          <Text className="text-error text-xs mb-3">{errors.dailyRupees.message}</Text>
-        )}
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="dailyRupees"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label="Daily rate"
+                prefix="₹"
+                value={value ? String(value) : ''}
+                onChangeText={(t) => onChange(parseFloat(t) || 0)}
+                placeholder="2500"
+                keyboardType="numeric"
+                error={errors.dailyRupees?.message}
+              />
+            )}
+          />
+        </View>
 
         {/* Minimum hours */}
         <Text className="text-ink font-semibold text-sm mb-2">Minimum rental hours</Text>
@@ -279,41 +281,37 @@ export default function AddMachinePricing() {
         />
 
         {/* Village + District */}
-        <Text className="text-ink font-semibold text-sm mb-2">Village</Text>
         <Controller
           control={control}
           name="village"
           render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
+            <InputField
+              label="Village"
+              value={value}
+              onChangeText={onChange}
               placeholder="e.g. Maddur"
-              placeholderTextColor={colors.inkMute}
-              value={value}
-              onChangeText={onChange}
+              autoCapitalize="words"
+              error={errors.village?.message}
             />
           )}
         />
-        {errors.village && (
-          <Text className="text-error text-xs mb-3">{errors.village.message}</Text>
-        )}
 
-        <Text className="text-ink font-semibold text-sm mb-2">District</Text>
-        <Controller
-          control={control}
-          name="district"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-4"
-              placeholder="e.g. Mandya"
-              placeholderTextColor={colors.inkMute}
-              value={value}
-              onChangeText={onChange}
-            />
-          )}
-        />
-        {errors.district && (
-          <Text className="text-error text-xs mb-3">{errors.district.message}</Text>
-        )}
+        <View className="mt-4 mb-4">
+          <Controller
+            control={control}
+            name="district"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label="District"
+                value={value}
+                onChangeText={onChange}
+                placeholder="e.g. Mandya"
+                autoCapitalize="words"
+                error={errors.district?.message}
+              />
+            )}
+          />
+        </View>
 
         {/* Map pin — uses platform-specific MapLocationPicker to avoid web bundling react-native-maps */}
         <Text className="text-ink font-semibold text-sm mb-2">Farm location</Text>
@@ -332,17 +330,13 @@ export default function AddMachinePricing() {
         {uploadStatus !== '' && (
           <Text className="text-ink-mute text-xs text-center mb-2">{uploadStatus}</Text>
         )}
-        <Pressable
+        <Button
+          label="Publish listing"
           onPress={() => void onSubmit()}
-          disabled={isPending}
-          className="bg-primary rounded-2xl py-4 items-center min-h-[52px] justify-center"
-        >
-          {isPending ? (
-            <ActivityIndicator color={colors.surface} />
-          ) : (
-            <Text className="text-white font-bold text-base">Publish listing</Text>
-          )}
-        </Pressable>
+          variant="primary"
+          size="lg"
+          loading={isPending}
+        />
       </View>
     </SafeAreaView>
   );

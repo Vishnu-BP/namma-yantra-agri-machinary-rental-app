@@ -9,7 +9,8 @@
  */
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { ChevronDown, ShoppingCart, Tractor, Users } from 'lucide-react-native';
+import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
   Alert,
@@ -22,9 +23,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
 import { KARNATAKA_DISTRICTS } from '@/constants/karnataka-districts';
+import { Button } from '@/components/ui/Button';
+import { InputField } from '@/components/ui/InputField';
 import { auth } from '@/integrations/supabase';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/stores/authStore';
@@ -40,17 +44,25 @@ const schema = z.object({
 });
 type FormValues = z.infer<typeof schema>;
 
-const ROLE_OPTIONS: { value: FormValues['role']; label: string }[] = [
-  { value: 'renter', label: 'Rent machinery' },
-  { value: 'owner', label: 'List my machinery' },
-  { value: 'both', label: 'Both' },
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+type RoleOption = { value: FormValues['role']; labelKey: string; icon: typeof Tractor };
+
+const ROLE_OPTIONS: RoleOption[] = [
+  { value: 'renter', labelKey: 'auth.roleSelect.rentMachinery', icon: ShoppingCart },
+  { value: 'owner', labelKey: 'auth.roleSelect.listMachinery', icon: Tractor },
+  { value: 'both', labelKey: 'auth.roleSelect.both', icon: Users },
 ];
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export default function RoleSelect() {
+  const { t } = useTranslation();
   const session = useAuthStore((s) => s.session);
   const setProfile = useAuthStore((s) => s.setProfile);
 
   const [districtPickerOpen, setDistrictPickerOpen] = useState(false);
+  const [districtSearch, setDistrictSearch] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -75,6 +87,16 @@ export default function RoleSelect() {
 
   const role = watch('role');
   const district = watch('district');
+
+  const filteredDistricts = useMemo(
+    () =>
+      districtSearch.trim()
+        ? KARNATAKA_DISTRICTS.filter((d) =>
+            d.toLowerCase().includes(districtSearch.toLowerCase())
+          )
+        : KARNATAKA_DISTRICTS,
+    [districtSearch]
+  );
 
   // Defensive: root dispatcher should never let us reach here without session.
   if (!session) {
@@ -101,8 +123,8 @@ export default function RoleSelect() {
     } catch (err) {
       log.error('createProfile UI', err);
       Alert.alert(
-        'Could not save profile',
-        err instanceof Error ? err.message : 'Please try again.'
+        t('auth.roleSelect.errorTitle'),
+        err instanceof Error ? err.message : t('common.tryAgain')
       );
     } finally {
       setBusy(false);
@@ -117,112 +139,124 @@ export default function RoleSelect() {
         contentContainerClassName="pb-12 sm:py-4 lg:py-8"
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-ink text-2xl font-semibold mt-6 mb-2">
-          Tell us about yourself
+        <Text className="text-ink text-2xl font-bold mt-6 mb-1">
+          {t('auth.roleSelect.title')}
         </Text>
         <Text className="text-ink-soft text-base mb-8">
-          A few quick details so we can match you with nearby machines or renters.
+          {t('auth.roleSelect.subtitle')}
         </Text>
 
-        <Text className="text-ink-soft text-sm mb-2">I want to</Text>
+        {/* ── Role chips ── */}
+        <Text className="text-ink-soft text-sm font-medium mb-3">
+          {t('auth.roleSelect.iWantTo')}
+        </Text>
         <View className="flex-row gap-2 mb-6">
-          {ROLE_OPTIONS.map((opt) => (
-            <Pressable
-              key={opt.value}
-              onPress={() => {
-                log.info('Role-select: role chosen', { role: opt.value });
-                setValue('role', opt.value);
-              }}
-              className={`flex-1 rounded-xl py-3 items-center border min-h-[44px] justify-center ${
-                role === opt.value
-                  ? 'bg-primary border-primary'
-                  : 'bg-surface border-border'
-              }`}
-            >
-              <Text
-                className={`${
-                  role === opt.value ? 'text-white' : 'text-ink'
-                } font-medium text-center`}
+          {ROLE_OPTIONS.map((opt) => {
+            const selected = role === opt.value;
+            const RoleIcon = opt.icon;
+            return (
+              <Pressable
+                key={opt.value}
+                onPress={() => {
+                  log.info('Role-select: role chosen', { role: opt.value });
+                  setValue('role', opt.value);
+                }}
+                className={`flex-1 rounded-2xl py-4 items-center border-2 min-h-[72px] justify-center gap-1.5 ${
+                  selected
+                    ? 'bg-primary border-primary shadow-cta'
+                    : 'bg-surface border-border shadow-card'
+                }`}
               >
-                {opt.label}
-              </Text>
-            </Pressable>
-          ))}
+                <RoleIcon size={20} color={selected ? '#FFFFFF' : colors.primary} />
+                <Text
+                  className={`font-semibold text-xs text-center ${
+                    selected ? 'text-white' : 'text-ink'
+                  }`}
+                  numberOfLines={2}
+                >
+                  {t(opt.labelKey)}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
-        <Text className="text-ink-soft text-sm mb-2">Full name</Text>
+        {/* ── Form fields ── */}
         <Controller
           control={control}
           name="display_name"
           render={({ field: { onChange, value } }) => (
-            <TextInput
+            <InputField
+              label={t('auth.roleSelect.fullName')}
               value={value}
               onChangeText={onChange}
-              placeholder="Your full name"
-              placeholderTextColor={colors.inkMute}
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-base mb-1"
+              placeholder={t('auth.roleSelect.fullNamePlaceholder')}
+              autoCapitalize="words"
+              autoComplete="name"
+              error={errors.display_name?.message}
             />
           )}
         />
-        {errors.display_name && (
-          <Text className="text-error text-sm mb-3">
-            {errors.display_name.message}
-          </Text>
-        )}
 
-        <Text className="text-ink-soft text-sm mb-2 mt-3">Village</Text>
-        <Controller
-          control={control}
-          name="village"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              value={value}
-              onChangeText={onChange}
-              placeholder="Village name"
-              placeholderTextColor={colors.inkMute}
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-base mb-1"
-            />
-          )}
-        />
-        {errors.village && (
-          <Text className="text-error text-sm mb-3">
-            {errors.village.message}
-          </Text>
-        )}
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="village"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label={t('auth.roleSelect.village')}
+                value={value}
+                onChangeText={onChange}
+                placeholder={t('auth.roleSelect.villagePlaceholder')}
+                autoCapitalize="words"
+                error={errors.village?.message}
+              />
+            )}
+          />
+        </View>
 
-        <Text className="text-ink-soft text-sm mb-2 mt-3">District</Text>
-        <Pressable
-          onPress={() => {
-            log.info('Role-select: district picker opened');
-            setDistrictPickerOpen(true);
-          }}
-          className="bg-surface border border-border rounded-xl px-4 py-3 mb-1 min-h-[44px] justify-center"
-        >
-          <Text
-            className={
-              district ? 'text-ink text-base' : 'text-ink-mute text-base'
-            }
+        {/* ── District picker (styled as InputField) ── */}
+        <View className="mt-4">
+          <Text className="text-ink-soft text-sm font-medium mb-1.5">
+            {t('auth.roleSelect.district')}
+          </Text>
+          <Pressable
+            onPress={() => {
+              log.info('Role-select: district picker opened');
+              setDistrictSearch('');
+              setDistrictPickerOpen(true);
+            }}
+            className={`flex-row items-center bg-surface rounded-xl px-4 min-h-[52px] border-2 ${
+              errors.district ? 'border-error' : 'border-border'
+            }`}
           >
-            {district || 'Select a district'}
-          </Text>
-        </Pressable>
-        {errors.district && (
-          <Text className="text-error text-sm mb-3">
-            {errors.district.message}
-          </Text>
-        )}
+            <Text
+              className={`flex-1 text-base ${
+                district ? 'text-ink' : 'text-ink-mute'
+              }`}
+            >
+              {district || t('auth.roleSelect.districtPlaceholder')}
+            </Text>
+            <ChevronDown size={18} color={colors.inkMute} />
+          </Pressable>
+          {errors.district && (
+            <Text className="text-error text-xs mt-1">
+              {errors.district.message}
+            </Text>
+          )}
+        </View>
 
-        <Pressable
+        <Button
+          label={busy ? t('common.saving') : t('auth.roleSelect.continue')}
           onPress={handleSubmit(onSubmit)}
-          disabled={busy}
-          className="bg-primary rounded-xl py-4 items-center mt-8 min-h-[44px] justify-center"
-        >
-          <Text className="text-white text-base font-semibold">
-            {busy ? 'Saving…' : 'Continue'}
-          </Text>
-        </Pressable>
+          variant="primary"
+          size="lg"
+          loading={busy}
+          className="mt-8"
+        />
       </ScrollView>
 
+      {/* ── District picker modal ── */}
       <Modal
         visible={districtPickerOpen}
         animationType="slide"
@@ -230,20 +264,37 @@ export default function RoleSelect() {
       >
         <SafeAreaView className="flex-1 bg-bg">
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-border">
-            <Text className="text-ink text-lg font-semibold">
-              Select district
+            <Text className="text-ink text-lg font-bold">
+              {t('auth.roleSelect.selectDistrict')}
             </Text>
             <Pressable
               onPress={() => setDistrictPickerOpen(false)}
               hitSlop={12}
               className="min-h-[44px] justify-center"
             >
-              <Text className="text-primary text-base">Close</Text>
+              <Text className="text-primary text-base font-medium">
+                {t('common.close')}
+              </Text>
             </Pressable>
           </View>
+
+          {/* Search bar */}
+          <View className="px-4 py-3 border-b border-border">
+            <TextInput
+              value={districtSearch}
+              onChangeText={setDistrictSearch}
+              placeholder={t('auth.roleSelect.searchDistrict')}
+              placeholderTextColor={colors.inkMute}
+              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-base"
+              autoCapitalize="none"
+              clearButtonMode="while-editing"
+            />
+          </View>
+
           <FlatList
-            data={KARNATAKA_DISTRICTS}
+            data={filteredDistricts}
             keyExtractor={(item) => item}
+            keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => (
               <Pressable
                 onPress={() => {
@@ -253,11 +304,18 @@ export default function RoleSelect() {
                   setValue('district', item);
                   setDistrictPickerOpen(false);
                 }}
-                className="px-6 py-4 border-b border-border min-h-[44px] justify-center"
+                className="px-6 py-4 border-b border-border min-h-[52px] justify-center active:opacity-75"
               >
                 <Text className="text-ink text-base">{item}</Text>
               </Pressable>
             )}
+            ListEmptyComponent={
+              <View className="items-center py-10">
+                <Text className="text-ink-mute text-sm">
+                  {t('auth.roleSelect.noDistrictFound')}
+                </Text>
+              </View>
+            }
           />
         </SafeAreaView>
       </Modal>

@@ -12,22 +12,22 @@
  *   archived → soft-deleted, stays in owner's history
  */
 import { router, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, CircleHelp } from 'lucide-react-native';
+import { AlertTriangle, ArrowLeft, CircleHelp, Trash2 } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 
+import { Button } from '@/components/ui/Button';
+import { InputField } from '@/components/ui/InputField';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { useMachine, useDeleteMachine, useUpdateMachine } from '@/hooks/useMachines';
@@ -181,7 +181,7 @@ export default function EditMachine() {
     );
   };
 
-  if (isLoading) return <LoadingState subtitle="Loading machine…" />;
+  if (isLoading) return <LoadingState layout="card-detail" />;
   if (!machine) {
     return (
       <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
@@ -248,114 +248,105 @@ export default function EditMachine() {
         </View>
 
         {/* Title */}
-        <Text className="text-ink font-semibold text-sm mb-2">Title</Text>
         <Controller
           control={control}
           name="title"
           render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              value={value}
-              onChangeText={onChange}
-              maxLength={80}
-            />
+            <InputField label="Title" value={value ?? ''} onChangeText={onChange} maxLength={80} error={errors.title?.message} />
           )}
         />
-        {errors.title && <Text className="text-error text-xs mb-3">{errors.title.message}</Text>}
 
         {/* Brand */}
-        <Text className="text-ink font-semibold text-sm mb-2">Brand</Text>
-        <Controller
-          control={control}
-          name="brand"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              value={value}
-              onChangeText={onChange}
-            />
-          )}
-        />
-        {errors.brand && <Text className="text-error text-xs mb-3">{errors.brand.message}</Text>}
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="brand"
+            render={({ field: { onChange, value } }) => (
+              <InputField label="Brand" value={value ?? ''} onChangeText={onChange} error={errors.brand?.message} />
+            )}
+          />
+        </View>
 
         {/* Model */}
-        <Text className="text-ink font-semibold text-sm mb-2">Model</Text>
-        <Controller
-          control={control}
-          name="model"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              value={value}
-              onChangeText={onChange}
-            />
-          )}
-        />
-        {errors.model && <Text className="text-error text-xs mb-3">{errors.model.message}</Text>}
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="model"
+            render={({ field: { onChange, value } }) => (
+              <InputField label="Model" value={value ?? ''} onChangeText={onChange} error={errors.model?.message} />
+            )}
+          />
+        </View>
 
         {/* Year */}
-        <Text className="text-ink font-semibold text-sm mb-2">Year of purchase</Text>
-        <Controller
-          control={control}
-          name="yearOfPurchase"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-4"
-              keyboardType="numeric"
-              value={value ? String(value) : ''}
-              onChangeText={(t) => onChange(parseInt(t, 10) || 0)}
-            />
-          )}
-        />
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="yearOfPurchase"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label="Year of purchase"
+                value={value ? String(value) : ''}
+                onChangeText={(t) => onChange(parseInt(t, 10) || 0)}
+                keyboardType="numeric"
+              />
+            )}
+          />
+        </View>
 
         {/* Description */}
-        <Text className="text-ink font-semibold text-sm mb-2">Description</Text>
-        <Controller
-          control={control}
-          name="descriptionEn"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-4"
-              value={value}
-              onChangeText={onChange}
-              multiline
-              numberOfLines={4}
-              maxLength={500}
-            />
-          )}
-        />
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="descriptionEn"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label="Description"
+                value={value ?? ''}
+                onChangeText={onChange}
+                multiline
+                numberOfLines={4}
+                maxLength={500}
+                error={errors.descriptionEn?.message}
+              />
+            )}
+          />
+        </View>
 
         {/* Pricing */}
-        <Text className="text-ink font-semibold text-sm mb-2">Hourly rate (₹)</Text>
-        <Controller
-          control={control}
-          name="hourlyRupees"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              keyboardType="numeric"
-              value={value ? String(value) : ''}
-              onChangeText={(t) => onChange(parseFloat(t) || 0)}
-            />
-          )}
-        />
-        {errors.hourlyRupees && (
-          <Text className="text-error text-xs mb-3">{errors.hourlyRupees.message}</Text>
-        )}
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="hourlyRupees"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label="Hourly rate"
+                prefix="₹"
+                value={value ? String(value) : ''}
+                onChangeText={(t) => onChange(parseFloat(t) || 0)}
+                keyboardType="numeric"
+                error={errors.hourlyRupees?.message}
+              />
+            )}
+          />
+        </View>
 
-        <Text className="text-ink font-semibold text-sm mb-2">Daily rate (₹)</Text>
-        <Controller
-          control={control}
-          name="dailyRupees"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-4"
-              keyboardType="numeric"
-              value={value ? String(value) : ''}
-              onChangeText={(t) => onChange(parseFloat(t) || 0)}
-            />
-          )}
-        />
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="dailyRupees"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label="Daily rate"
+                prefix="₹"
+                value={value ? String(value) : ''}
+                onChangeText={(t) => onChange(parseFloat(t) || 0)}
+                keyboardType="numeric"
+                error={errors.dailyRupees?.message}
+              />
+            )}
+          />
+        </View>
 
         {/* Condition */}
         <Text className="text-ink font-semibold text-sm mb-2">Condition</Text>
@@ -378,64 +369,55 @@ export default function EditMachine() {
         </View>
 
         {/* Village + district */}
-        <Text className="text-ink font-semibold text-sm mb-2">Village</Text>
-        <Controller
-          control={control}
-          name="village"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-4"
-              value={value}
-              onChangeText={onChange}
-            />
-          )}
-        />
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="village"
+            render={({ field: { onChange, value } }) => (
+              <InputField label="Village" value={value ?? ''} onChangeText={onChange} error={errors.village?.message} />
+            )}
+          />
+        </View>
 
-        <Text className="text-ink font-semibold text-sm mb-2">District</Text>
-        <Controller
-          control={control}
-          name="district"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-6"
-              value={value}
-              onChangeText={onChange}
-            />
-          )}
-        />
+        <View className="mt-4 mb-6">
+          <Controller
+            control={control}
+            name="district"
+            render={({ field: { onChange, value } }) => (
+              <InputField label="District" value={value ?? ''} onChangeText={onChange} error={errors.district?.message} />
+            )}
+          />
+        </View>
 
-        {/* Delete zone */}
-        <View className="border border-error/30 rounded-2xl p-4">
-          <Text className="text-ink font-semibold mb-1">Danger zone</Text>
-          <Text className="text-ink-mute text-sm mb-3">
+        {/* Danger zone */}
+        <View className="bg-error/5 border border-error/30 rounded-2xl p-4">
+          <View className="flex-row items-center gap-2 mb-2">
+            <AlertTriangle size={16} color={colors.error} />
+            <Text className="text-error font-semibold text-sm">Danger zone</Text>
+          </View>
+          <Text className="text-ink-mute text-sm mb-4">
             Deleting this listing removes all photos and cannot be undone.
           </Text>
-          <Pressable
+          <Button
+            label="Delete listing"
             onPress={handleDelete}
+            variant="danger"
+            icon={Trash2}
+            loading={deleteMutation.isPending}
             disabled={isBusy}
-            className="bg-error rounded-xl py-3 items-center min-h-[44px] justify-center"
-          >
-            {deleteMutation.isPending ? (
-              <ActivityIndicator color={colors.surface} size="small" />
-            ) : (
-              <Text className="text-white font-semibold text-sm">Delete listing</Text>
-            )}
-          </Pressable>
+          />
         </View>
       </ScrollView>
 
       <View className="px-4 pb-6">
-        <Pressable
+        <Button
+          label="Save changes"
           onPress={() => void onSave()}
+          variant="primary"
+          size="lg"
+          loading={updateMutation.isPending}
           disabled={isBusy}
-          className="bg-primary rounded-2xl py-4 items-center min-h-[52px] justify-center"
-        >
-          {updateMutation.isPending ? (
-            <ActivityIndicator color={colors.surface} />
-          ) : (
-            <Text className="text-white font-bold text-base">Save changes</Text>
-          )}
-        </Pressable>
+        />
       </View>
     </SafeAreaView>
   );

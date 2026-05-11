@@ -66,7 +66,7 @@ export default function OwnerRequests() {
     [respondMutation],
   );
 
-  if (isLoading) return <LoadingState subtitle="Loading requests…" />;
+  if (isLoading) return <LoadingState layout="card-list" count={3} />;
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
@@ -86,7 +86,7 @@ export default function OwnerRequests() {
                   setFilter(f.key);
                 }}
                 className={`px-4 py-2 rounded-full min-h-[36px] justify-center ${
-                  active ? 'bg-primary' : 'bg-surface border border-border'
+                  active ? 'bg-primary shadow-card' : 'bg-surface border border-border'
                 }`}
               >
                 <Text

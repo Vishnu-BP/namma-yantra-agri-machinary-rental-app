@@ -22,6 +22,7 @@ interface BadgeProps {
   variant: BadgeVariant;
   label: string;
   icon?: LucideIcon;
+  size?: 'sm' | 'md';
 }
 
 // Why hard-coded mapping over a colors[variant] lookup: NativeWind v4
@@ -37,16 +38,16 @@ const VARIANT_CLASSES: Record<BadgeVariant, { bg: string; text: string }> = {
   completed: { bg: 'bg-accent', text: 'text-white' },
 };
 
-const ICON_SIZE = 12;
-
-export function Badge({ variant, label, icon: Icon }: BadgeProps) {
+export function Badge({ variant, label, icon: Icon, size = 'sm' }: BadgeProps) {
   const v = VARIANT_CLASSES[variant];
+  const iconSize = size === 'md' ? 14 : 12;
+  const textClass = size === 'md' ? 'text-sm' : 'text-xs';
   return (
     <View
-      className={`flex-row items-center gap-1 px-2 py-1 rounded-full ${v.bg}`}
+      className={`flex-row items-center gap-1 px-2.5 py-1 rounded-full ${v.bg}`}
     >
-      {Icon && <Icon size={ICON_SIZE} color="#FFFFFF" />}
-      <Text className={`text-xs font-medium ${v.text}`}>{label}</Text>
+      {Icon && <Icon size={iconSize} color="#FFFFFF" />}
+      <Text className={`font-medium ${textClass} ${v.text}`}>{label}</Text>
     </View>
   );
 }

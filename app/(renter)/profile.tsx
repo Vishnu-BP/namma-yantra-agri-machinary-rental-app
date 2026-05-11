@@ -6,16 +6,20 @@
  * preference to the profiles table, and sign-out. Language is switched via
  * i18n.changeLanguage() so all t() calls re-render without a full reload.
  */
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { LogOut, MapPin, Tag, User } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/ui/Button';
 import { auth, supabase } from '@/integrations/supabase';
 import i18n from '@/lib/i18n';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/stores/authStore';
+import { colors } from '@/theme/colors';
 
 const log = createLogger('UI');
 const authLog = createLogger('AUTH');
@@ -54,69 +58,105 @@ export default function Profile() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <View className="flex-1 px-6 pt-6">
-        <Text className="text-ink text-2xl font-semibold mb-1">{t('profile.title')}</Text>
-        <Text className="text-ink-soft text-sm mb-8">
-          Account details · sign out
-        </Text>
-
-        <View className="bg-surface border border-border rounded-xl p-4 mb-6">
-          <Text className="text-ink-mute text-xs">Name</Text>
-          <Text className="text-ink text-base font-medium mt-1">
+      <ScrollView className="flex-1">
+        {/* ── Gradient header banner ── */}
+        <LinearGradient
+          colors={[colors.primary, colors.primaryDark]}
+          style={{ paddingTop: 40, paddingBottom: 32, paddingHorizontal: 24, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 }}
+        >
+          <View className="w-16 h-16 bg-white/20 rounded-full items-center justify-center mb-3">
+            <User size={32} color="white" />
+          </View>
+          <Text className="text-white text-xl font-bold">
             {profile?.display_name ?? '—'}
           </Text>
-          <Text className="text-ink-mute text-xs mt-3">Location</Text>
-          <Text className="text-ink text-base font-medium mt-1">
+          <Text className="text-white/70 text-sm mt-0.5">
             {profile?.village ?? '—'}, {profile?.district ?? '—'}
           </Text>
-          <Text className="text-ink-mute text-xs mt-3">Role</Text>
-          <Text className="text-ink text-base font-medium mt-1 capitalize">
-            {profile?.role ?? '—'}
-          </Text>
-        </View>
+        </LinearGradient>
 
-        {/* Language toggle */}
-        <View className="bg-surface border border-border rounded-xl p-4 mb-6">
-          <Text className="text-ink-mute text-xs mb-3">{t('profile.language')}</Text>
-          <View className="flex-row gap-3">
-            <Pressable
-              onPress={handleToggleLanguage}
-              className={`flex-1 py-3 rounded-xl items-center border active:opacity-70 ${
-                i18n.language === 'en' ? 'bg-primary border-primary' : 'bg-surface border-border'
-              }`}
-            >
-              <Text
-                className={`font-semibold text-sm ${
-                  i18n.language === 'en' ? 'text-white' : 'text-ink-soft'
-                }`}
-              >
-                {t('profile.english')}
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={handleToggleLanguage}
-              className={`flex-1 py-3 rounded-xl items-center border active:opacity-70 ${
-                i18n.language === 'kn' ? 'bg-primary border-primary' : 'bg-surface border-border'
-              }`}
-            >
-              <Text
-                className={`font-semibold text-sm ${
-                  i18n.language === 'kn' ? 'text-white' : 'text-ink-soft'
-                }`}
-              >
-                {t('profile.kannada')}
-              </Text>
-            </Pressable>
+        <View className="px-6 pt-6">
+          {/* ── Details card with icon-labeled rows ── */}
+          <View className="bg-surface border border-border rounded-2xl shadow-card overflow-hidden mb-6">
+            <View className="flex-row items-center gap-3 px-4 py-4 border-b border-border">
+              <View className="w-8 h-8 bg-primary/10 rounded-full items-center justify-center">
+                <User size={16} color={colors.primary} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-ink-mute text-xs">{t('profile.name')}</Text>
+                <Text className="text-ink text-base font-medium mt-0.5">
+                  {profile?.display_name ?? '—'}
+                </Text>
+              </View>
+            </View>
+            <View className="flex-row items-center gap-3 px-4 py-4 border-b border-border">
+              <View className="w-8 h-8 bg-primary/10 rounded-full items-center justify-center">
+                <MapPin size={16} color={colors.primary} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-ink-mute text-xs">{t('profile.location')}</Text>
+                <Text className="text-ink text-base font-medium mt-0.5">
+                  {profile?.village ?? '—'}, {profile?.district ?? '—'}
+                </Text>
+              </View>
+            </View>
+            <View className="flex-row items-center gap-3 px-4 py-4">
+              <View className="w-8 h-8 bg-primary/10 rounded-full items-center justify-center">
+                <Tag size={16} color={colors.primary} />
+              </View>
+              <View className="flex-1">
+                <Text className="text-ink-mute text-xs">{t('profile.role')}</Text>
+                <Text className="text-ink text-base font-medium mt-0.5 capitalize">
+                  {profile?.role ?? '—'}
+                </Text>
+              </View>
+            </View>
           </View>
-        </View>
 
-        <Pressable
-          onPress={handleSignOut}
-          className="bg-primary rounded-xl py-4 items-center min-h-[44px] justify-center active:opacity-70"
-        >
-          <Text className="text-white text-base font-semibold">{t('profile.signOut')}</Text>
-        </Pressable>
-      </View>
+          {/* ── Language toggle ── */}
+          <View className="bg-surface border border-border rounded-2xl shadow-card p-4 mb-6">
+            <Text className="text-ink-soft text-sm font-medium mb-3">{t('profile.language')}</Text>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={handleToggleLanguage}
+                className={`flex-1 py-3 rounded-xl items-center border-2 active:opacity-70 ${
+                  i18n.language === 'en' ? 'bg-primary border-primary shadow-cta' : 'bg-surface border-border'
+                }`}
+              >
+                <Text
+                  className={`font-semibold text-sm ${
+                    i18n.language === 'en' ? 'text-white' : 'text-ink-soft'
+                  }`}
+                >
+                  {t('profile.english')}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleToggleLanguage}
+                className={`flex-1 py-3 rounded-xl items-center border-2 active:opacity-70 ${
+                  i18n.language === 'kn' ? 'bg-primary border-primary shadow-cta' : 'bg-surface border-border'
+                }`}
+              >
+                <Text
+                  className={`font-semibold text-sm ${
+                    i18n.language === 'kn' ? 'text-white' : 'text-ink-soft'
+                  }`}
+                >
+                  {t('profile.kannada')}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* ── Sign out (ghost — not the primary action) ── */}
+          <Button
+            label={t('profile.signOut')}
+            onPress={handleSignOut}
+            variant="ghost"
+            icon={LogOut}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

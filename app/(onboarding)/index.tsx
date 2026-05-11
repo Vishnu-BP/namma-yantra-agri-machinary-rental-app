@@ -7,6 +7,7 @@
  * route to `/(auth)`. Returning users never see this screen — the root
  * dispatcher routes them straight past it.
  */
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Sparkles, Sprout, Tractor } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
@@ -18,7 +19,9 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/ui/Button';
 import { createLogger } from '@/lib/logger';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 import { colors } from '@/theme/colors';
@@ -33,22 +36,23 @@ const SLIDE_MAX_WIDTH = 768;
 const SLIDES = [
   {
     icon: Tractor,
-    title: 'Rent farm machinery near you',
-    body: 'Find tractors, harvesters, and tillers from owners in your district. Pay only for the hours you use.',
+    titleKey: 'onboarding.slide1.title',
+    bodyKey: 'onboarding.slide1.body',
   },
   {
     icon: Sprout,
-    title: 'Earn from machinery you own',
-    body: 'List your tractor or implement and accept rental requests on your terms. We handle the schedule.',
+    titleKey: 'onboarding.slide2.title',
+    bodyKey: 'onboarding.slide2.body',
   },
   {
     icon: Sparkles,
-    title: 'AI-powered listings & pricing',
-    body: 'Auto-suggest fair prices, generate listings, and answer renter questions in English or Kannada.',
+    titleKey: 'onboarding.slide3.title',
+    bodyKey: 'onboarding.slide3.body',
   },
 ] as const;
 
 export default function Onboarding() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const markSeen = useOnboardingStore((s) => s.markSeen);
@@ -101,6 +105,8 @@ export default function Onboarding() {
     router.replace('/(auth)');
   };
 
+  const isLast = page === SLIDES.length - 1;
+
   return (
     <SafeAreaView className="flex-1 bg-bg md:max-w-3xl md:mx-auto md:w-full">
       <View className="flex-row justify-end p-4">
@@ -109,7 +115,7 @@ export default function Onboarding() {
           hitSlop={12}
           className="px-4 py-2 min-h-[44px] justify-center"
         >
-          <Text className="text-ink-soft text-base">Skip</Text>
+          <Text className="text-ink-soft text-base">{t('common.skip')}</Text>
         </Pressable>
       </View>
 
@@ -135,40 +141,46 @@ export default function Onboarding() {
               style={{ width: slideWidth }}
               className="items-center justify-center px-8"
             >
-              <View className="bg-primary/10 rounded-full p-6 mb-8">
+              {/* LinearGradient circle replaces flat bg-primary/10 */}
+              <LinearGradient
+                colors={[colors.primaryLight, colors.border]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ borderRadius: 9999, padding: 28, marginBottom: 32 }}
+              >
                 <Icon size={64} color={colors.primary} />
-              </View>
-              <Text className="text-ink text-2xl font-semibold text-center mb-3">
-                {slide.title}
+              </LinearGradient>
+              <Text className="text-ink text-2xl font-bold text-center mb-3">
+                {t(slide.titleKey)}
               </Text>
-              <Text className="text-ink-soft text-base text-center leading-6">
-                {slide.body}
+              <Text className="text-ink-soft text-base text-center leading-6 max-w-[280px]">
+                {t(slide.bodyKey)}
               </Text>
             </View>
           );
         })}
       </ScrollView>
 
-      <View className="flex-row justify-center mb-6">
+      {/* ── Segmented progress bar (replaces dots) ── */}
+      <View className="flex-row gap-1.5 mx-6 mb-6">
         {SLIDES.map((_, i) => (
           <View
             key={i}
-            className={`w-2 h-2 rounded-full mx-1 ${
-              page === i ? 'bg-primary' : 'bg-border'
+            className={`flex-1 h-1.5 rounded-full ${
+              i <= page ? 'bg-primary' : 'bg-border'
             }`}
           />
         ))}
       </View>
 
+      {/* ── CTA with gradient fade behind it ── */}
       <View className="px-6 pb-6">
-        <Pressable
+        <Button
+          label={isLast ? t('onboarding.getStarted') : t('common.continue')}
           onPress={handleNext}
-          className="bg-primary rounded-xl py-4 items-center min-h-[44px] justify-center"
-        >
-          <Text className="text-white text-base font-semibold">
-            {page === SLIDES.length - 1 ? 'Get Started' : 'Continue'}
-          </Text>
-        </Pressable>
+          variant="primary"
+          size="lg"
+        />
       </View>
     </SafeAreaView>
   );

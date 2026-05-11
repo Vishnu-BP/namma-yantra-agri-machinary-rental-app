@@ -12,16 +12,15 @@
  * function recomputes server-side and ignores the client value.
  */
 
+import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,6 +31,8 @@ import { z } from 'zod/v4';
 import { addHours, format, setHours, setMinutes, setSeconds } from 'date-fns';
 import { ArrowLeft, CheckCircle } from 'lucide-react-native';
 
+import { Button } from '@/components/ui/Button';
+import { InputField } from '@/components/ui/InputField';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { useMachine } from '@/hooks/useMachines';
 import { useCreateBooking, useMachineBookings } from '@/hooks/useBookings';
@@ -54,9 +55,11 @@ type BookingForm = z.infer<typeof bookingSchema>;
 
 const MIN_START_HOUR = 6;
 const MAX_START_HOUR = 18;
+const TOTAL_STEPS = 3;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+/** 3-segment progress bar replaces "Step N of 3" text */
 function StepHeader({
   step,
   title,
@@ -67,16 +70,26 @@ function StepHeader({
   onBack: () => void;
 }) {
   return (
-    <View className="flex-row items-center gap-3 px-4 pt-4 pb-2">
-      <Pressable
-        onPress={onBack}
-        className="w-10 h-10 items-center justify-center rounded-full bg-surface border border-border"
-      >
-        <ArrowLeft size={18} color={colors.ink} />
-      </Pressable>
-      <View className="flex-1">
-        <Text className="text-ink-mute text-xs">Step {step} of 3</Text>
-        <Text className="text-ink text-lg font-bold">{title}</Text>
+    <View className="px-4 pt-4 pb-2">
+      {/* Progress segments */}
+      <View className="flex-row gap-1.5 mb-4">
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+          <View
+            key={i}
+            className={`flex-1 h-1.5 rounded-full ${
+              i < step ? 'bg-primary' : 'bg-border'
+            }`}
+          />
+        ))}
+      </View>
+      <View className="flex-row items-center gap-3">
+        <Pressable
+          onPress={onBack}
+          className="w-10 h-10 items-center justify-center rounded-full bg-surface border border-border shadow-card"
+        >
+          <ArrowLeft size={18} color={colors.ink} />
+        </Pressable>
+        <Text className="text-ink text-lg font-bold flex-1">{title}</Text>
       </View>
     </View>
   );
@@ -107,7 +120,7 @@ export default function BookMachine() {
     log.info('BookMachine: page visited', { machineId });
   }, [machineId]);
 
-  if (machineLoading || !machine) return <LoadingState subtitle="Loading machine…" />;
+  if (machineLoading || !machine) return <LoadingState layout="card-detail" />;
 
   const disabledDates = getDisabledDates(activeBookings ?? []);
   const disabledDateMap = Object.fromEntries(
@@ -149,28 +162,30 @@ export default function BookMachine() {
       <SafeAreaView className="flex-1 bg-bg" edges={['top', 'bottom']}>
         <StepHeader step={1} title={t('booking.chooseDates')} onBack={() => router.back()} />
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-          {/* Calendar */}
-          <Calendar
-            minDate={today}
-            onDayPress={(day: { dateString: string }) => {
-              log.info('BookMachine: date selected', { date: day.dateString });
-              setSelectedDate(day.dateString);
-            }}
-            markedDates={{
-              ...disabledDateMap,
-              ...(selectedDate
-                ? { [selectedDate]: { selected: true, selectedColor: colors.primary } }
-                : {}),
-            }}
-            theme={{
-              todayTextColor: colors.primary,
-              selectedDayBackgroundColor: colors.primary,
-              arrowColor: colors.primary,
-              backgroundColor: colors.surface,
-              calendarBackground: colors.surface,
-            }}
-            style={{ borderRadius: 16, marginBottom: 20 }}
-          />
+          {/* Calendar with shadow wrapper */}
+          <View className="shadow-card rounded-2xl mb-5 overflow-hidden">
+            <Calendar
+              minDate={today}
+              onDayPress={(day: { dateString: string }) => {
+                log.info('BookMachine: date selected', { date: day.dateString });
+                setSelectedDate(day.dateString);
+              }}
+              markedDates={{
+                ...disabledDateMap,
+                ...(selectedDate
+                  ? { [selectedDate]: { selected: true, selectedColor: colors.primary } }
+                  : {}),
+              }}
+              theme={{
+                todayTextColor: colors.primary,
+                selectedDayBackgroundColor: colors.primary,
+                arrowColor: colors.primary,
+                backgroundColor: colors.surface,
+                calendarBackground: colors.surface,
+              }}
+              style={{ borderRadius: 16 }}
+            />
+          </View>
 
           {/* Duration unit toggle */}
           <Text className="text-ink font-semibold text-sm mb-2">{t('booking.rentalType')}</Text>
@@ -179,9 +194,9 @@ export default function BookMachine() {
               <Pressable
                 key={unit}
                 onPress={() => setDurationUnit(unit)}
-                className={`flex-1 py-3 rounded-xl items-center border ${
+                className={`flex-1 py-3 rounded-xl items-center border-2 ${
                   durationUnit === unit
-                    ? 'bg-primary border-primary'
+                    ? 'bg-primary border-primary shadow-cta'
                     : 'bg-surface border-border'
                 }`}
               >
@@ -196,7 +211,7 @@ export default function BookMachine() {
             ))}
           </View>
 
-          {/* Start hour (hourly only) */}
+          {/* Start hour chips (hourly only) — larger touch targets */}
           {durationUnit === 'hourly' && (
             <View className="mb-4">
               <Text className="text-ink font-semibold text-sm mb-2">
@@ -207,12 +222,12 @@ export default function BookMachine() {
                   <Pressable
                     key={h}
                     onPress={() => setStartHour(h)}
-                    className={`w-12 h-10 rounded-lg items-center justify-center border ${
-                      startHour === h ? 'bg-primary border-primary' : 'bg-surface border-border'
+                    className={`w-14 h-12 rounded-xl items-center justify-center border-2 ${
+                      startHour === h ? 'bg-primary border-primary shadow-cta' : 'bg-surface border-border'
                     }`}
                   >
                     <Text
-                      className={`text-sm font-medium ${startHour === h ? 'text-white' : 'text-ink-soft'}`}
+                      className={`text-sm font-semibold ${startHour === h ? 'text-white' : 'text-ink-soft'}`}
                     >
                       {h}
                     </Text>
@@ -222,7 +237,7 @@ export default function BookMachine() {
             </View>
           )}
 
-          {/* Duration hours (hourly only) */}
+          {/* Duration hours chips (hourly only) — larger touch targets */}
           {durationUnit === 'hourly' && (
             <View className="mb-4">
               <Text className="text-ink font-semibold text-sm mb-2">
@@ -234,14 +249,14 @@ export default function BookMachine() {
                   <Pressable
                     key={h}
                     onPress={() => setDurationHours(h)}
-                    className={`px-4 py-2 rounded-lg border ${
-                      durationHours === h ? 'bg-primary border-primary' : 'bg-surface border-border'
+                    className={`w-14 h-12 rounded-xl items-center justify-center border-2 ${
+                      durationHours === h ? 'bg-primary border-primary shadow-cta' : 'bg-surface border-border'
                     }`}
                   >
                     <Text
-                      className={`text-sm font-medium ${durationHours === h ? 'text-white' : 'text-ink-soft'}`}
+                      className={`text-sm font-semibold ${durationHours === h ? 'text-white' : 'text-ink-soft'}`}
                     >
-                      {h} hr
+                      {h}h
                     </Text>
                   </Pressable>
                 ))}
@@ -249,31 +264,27 @@ export default function BookMachine() {
             </View>
           )}
 
-          {/* Price preview */}
+          {/* Price preview card — elevated */}
           {pricing && selectedDate && (
-            <View className="bg-surface rounded-2xl p-4 border border-border mb-4">
-              <Text className="text-ink-mute text-xs mb-1">{t('booking.estimatedTotal')}</Text>
-              <Text className="text-ink text-2xl font-bold">{formatPaise(pricing.totalPaise)}</Text>
-              <Text className="text-ink-soft text-sm">{pricing.label}</Text>
+            <View className="bg-surfaceElevated rounded-2xl p-4 border border-primary/30 shadow-card mb-4">
+              <Text className="text-ink-mute text-xs uppercase tracking-wide mb-1">{t('booking.estimatedTotal')}</Text>
+              <Text className="text-primary text-3xl font-bold">{formatPaise(pricing.totalPaise)}</Text>
+              <Text className="text-ink-soft text-sm mt-1">{pricing.label}</Text>
             </View>
           )}
         </ScrollView>
 
         <View className="px-4 pb-6">
-          <Pressable
+          <Button
+            label={canProceedToStep2 ? t('booking.reviewBooking') : t('booking.selectDate')}
             onPress={() => {
               log.info('BookMachine: proceed to review tapped');
               setStep(2);
             }}
+            variant="primary"
+            size="lg"
             disabled={!canProceedToStep2}
-            className={`rounded-2xl py-4 items-center min-h-[52px] justify-center ${
-              canProceedToStep2 ? 'bg-primary' : 'bg-busy'
-            }`}
-          >
-            <Text className="text-white font-bold text-base">
-              {canProceedToStep2 ? t('booking.reviewBooking') : t('booking.selectDate')}
-            </Text>
-          </Pressable>
+          />
         </View>
       </SafeAreaView>
     );
@@ -296,7 +307,6 @@ export default function BookMachine() {
       setStep(3);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Something went wrong.';
-      // 409 overlap is surfaced as a user-friendly alert
       Alert.alert('Booking failed', msg);
       log.error('BookMachine: createBooking failed', err);
     }
@@ -317,8 +327,8 @@ export default function BookMachine() {
       <SafeAreaView className="flex-1 bg-bg" edges={['top', 'bottom']}>
         <StepHeader step={2} title={t('booking.reviewBooking')} onBack={() => setStep(1)} />
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-          {/* Machine summary */}
-          <View className="bg-surface rounded-2xl p-4 border border-border mb-4">
+          {/* Machine + booking summary — elevated card */}
+          <View className="bg-surfaceElevated border border-primary/30 rounded-2xl p-4 shadow-card mb-5">
             <Text className="text-ink font-bold text-base mb-1">{machine.title}</Text>
             <Text className="text-ink-soft text-sm mb-3">
               {machine.brand} {machine.model} · {machine.village}
@@ -328,49 +338,39 @@ export default function BookMachine() {
               {format(s, 'd MMM yyyy')}
               {durationUnit === 'hourly' ? ` · ${format(s, 'h:mm a')} – ${format(e, 'h:mm a')}` : ' · Full day'}
             </Text>
-            <Text className="text-ink-soft text-sm capitalize mb-3">{durationUnit} rental</Text>
-            <Text className="text-ink text-2xl font-bold">{formatPaise(reviewPricing.totalPaise)}</Text>
-            <Text className="text-ink-mute text-sm">{reviewPricing.label}</Text>
+            <Text className="text-ink-soft text-sm capitalize mb-4">{durationUnit} rental</Text>
+            <Text className="text-primary text-3xl font-bold">{formatPaise(reviewPricing.totalPaise)}</Text>
+            <Text className="text-ink-mute text-sm mt-0.5">{reviewPricing.label}</Text>
           </View>
 
-          {/* Renter note */}
-          <Text className="text-ink font-semibold text-sm mb-2">{t('booking.noteToOwner')}</Text>
+          {/* Renter note via InputField */}
           <Controller
             control={control}
             name="renterNote"
             render={({ field: { onChange, value } }) => (
-              <TextInput
-                className="bg-surface border border-border rounded-2xl p-4 text-ink text-sm mb-1"
-                placeholder={t('booking.notePlaceholder')}
-                placeholderTextColor={colors.inkMute}
-                value={value}
+              <InputField
+                label={t('booking.noteToOwner')}
+                value={value ?? ''}
                 onChangeText={onChange}
+                placeholder={t('booking.notePlaceholder')}
                 multiline
                 numberOfLines={3}
                 maxLength={300}
+                error={errors.renterNote?.message}
+                hint={t('booking.ownerNotified')}
               />
             )}
           />
-          {errors.renterNote && (
-            <Text className="text-error text-xs mb-3">{errors.renterNote.message}</Text>
-          )}
-          <Text className="text-ink-mute text-xs mb-4">
-            {t('booking.ownerNotified')}
-          </Text>
         </ScrollView>
 
         <View className="px-4 pb-6">
-          <Pressable
+          <Button
+            label={t('booking.sendRequest')}
             onPress={() => void onSubmit()}
-            disabled={createBookingMutation.isPending}
-            className="bg-primary rounded-2xl py-4 items-center min-h-[52px] justify-center"
-          >
-            {createBookingMutation.isPending ? (
-              <ActivityIndicator color={colors.surface} />
-            ) : (
-              <Text className="text-white font-bold text-base">{t('booking.sendRequest')}</Text>
-            )}
-          </Pressable>
+            variant="primary"
+            size="lg"
+            loading={createBookingMutation.isPending}
+          />
         </View>
       </SafeAreaView>
     );
@@ -380,31 +380,40 @@ export default function BookMachine() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6" edges={['top', 'bottom']}>
-      <CheckCircle size={72} color={colors.accepted} />
-      <Text className="text-ink text-2xl font-bold mt-6 mb-2 text-center">
+      {/* LinearGradient success circle */}
+      <LinearGradient
+        colors={[colors.accent, colors.accent]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={{ borderRadius: 9999, padding: 28, marginBottom: 24 }}
+      >
+        <CheckCircle size={56} color="#FFFFFF" />
+      </LinearGradient>
+      <Text className="text-ink text-2xl font-bold mb-2 text-center">
         {t('booking.requestSent')}
       </Text>
-      <Text className="text-ink-soft text-base text-center mb-10">
+      <Text className="text-ink-soft text-base text-center mb-10 max-w-[280px] leading-6">
         {t('booking.requestSentBody')}
       </Text>
-      <Pressable
+      <Button
+        label={t('booking.viewMyBookings')}
         onPress={() => {
           log.info('BookMachine: go to bookings tapped');
           router.replace('/(renter)/bookings');
         }}
-        className="bg-primary rounded-2xl py-4 px-8 items-center min-h-[52px] justify-center w-full"
-      >
-        <Text className="text-white font-bold text-base">{t('booking.viewMyBookings')}</Text>
-      </Pressable>
-      <Pressable
+        variant="primary"
+        size="lg"
+        className="w-full"
+      />
+      <Button
+        label={t('booking.continueBrowsing')}
         onPress={() => {
           log.info('BookMachine: continue browsing tapped');
           router.replace('/(renter)/discover');
         }}
-        className="mt-4 py-3"
-      >
-        <Text className="text-primary font-semibold">{t('booking.continueBrowsing')}</Text>
-      </Pressable>
+        variant="ghost"
+        className="mt-2"
+      />
     </SafeAreaView>
   );
 }

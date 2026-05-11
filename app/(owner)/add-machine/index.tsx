@@ -10,11 +10,12 @@
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { ArrowLeft, Star, X } from 'lucide-react-native';
+import { ArrowLeft, Plus, Star, X } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/ui/Button';
 import { createLogger } from '@/lib/logger';
 import { colors } from '@/theme/colors';
 import { useAddMachineStore } from '@/stores/addMachineStore';
@@ -72,17 +73,21 @@ export default function AddMachinePhotos() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top', 'bottom']}>
-      {/* Header */}
-      <View className="flex-row items-center gap-3 px-4 pt-4 pb-2">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-10 h-10 items-center justify-center rounded-full bg-surface border border-border"
-        >
-          <ArrowLeft size={18} color={colors.ink} />
-        </Pressable>
-        <View className="flex-1">
-          <Text className="text-ink-mute text-xs">Step 1 of 3</Text>
-          <Text className="text-ink text-lg font-bold">Add photos</Text>
+      {/* Header with progress bar */}
+      <View className="px-4 pt-4 pb-2">
+        <View className="flex-row gap-1.5 mb-4">
+          {[1, 2, 3].map((s) => (
+            <View key={s} className={`flex-1 h-1.5 rounded-full ${s <= 1 ? 'bg-primary' : 'bg-border'}`} />
+          ))}
+        </View>
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={() => router.back()}
+            className="w-10 h-10 items-center justify-center rounded-full bg-surface border border-border shadow-card"
+          >
+            <ArrowLeft size={18} color={colors.ink} />
+          </Pressable>
+          <Text className="text-ink text-lg font-bold flex-1">Add photos</Text>
         </View>
       </View>
 
@@ -94,7 +99,7 @@ export default function AddMachinePhotos() {
         {/* Photo grid */}
         <View className="flex-row flex-wrap gap-3 mb-4">
           {imageLocalUris.map((uri, i) => (
-            <View key={uri} className="relative">
+            <View key={uri} className="relative shadow-card rounded-xl">
               <Image
                 source={{ uri }}
                 style={{ width: 100, height: 100 }}
@@ -129,9 +134,9 @@ export default function AddMachinePhotos() {
             <Pressable
               onPress={handlePickPhotos}
               style={{ width: 100, height: 100 }}
-              className="rounded-xl border-2 border-dashed border-border bg-surface items-center justify-center"
+              className="rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 items-center justify-center"
             >
-              <Text className="text-primary text-2xl font-bold">+</Text>
+              <Plus size={28} color={colors.primary} />
               <Text className="text-ink-mute text-xs mt-1">Add photo</Text>
             </Pressable>
           )}
@@ -145,19 +150,17 @@ export default function AddMachinePhotos() {
       </ScrollView>
 
       <View className="px-4 pb-6">
-        <Pressable
-          onPress={handleContinue}
-          disabled={imageLocalUris.length === 0}
-          className={`rounded-2xl py-4 items-center min-h-[52px] justify-center ${
-            imageLocalUris.length > 0 ? 'bg-primary' : 'bg-busy'
-          }`}
-        >
-          <Text className="text-white font-bold text-base">
-            {imageLocalUris.length > 0
+        <Button
+          label={
+            imageLocalUris.length > 0
               ? `Continue with ${imageLocalUris.length} photo${imageLocalUris.length > 1 ? 's' : ''}`
-              : 'Select at least 1 photo'}
-          </Text>
-        </Pressable>
+              : 'Select at least 1 photo'
+          }
+          onPress={handleContinue}
+          variant="primary"
+          size="lg"
+          disabled={imageLocalUris.length === 0}
+        />
       </View>
     </SafeAreaView>
   );

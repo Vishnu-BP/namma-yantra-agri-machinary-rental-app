@@ -13,18 +13,20 @@ import { Pressable, View } from 'react-native';
 interface CardProps {
   children: ReactNode;
   onPress?: () => void;
+  /** Use surfaceElevated background + stronger shadow for modal/feature cards. */
+  elevated?: boolean;
   className?: string;
 }
 
-const BASE_CLASSES =
-  'bg-surface border border-border rounded-2xl p-4 min-h-[44px]';
+const BASE_CLASSES = 'border border-border rounded-2xl p-4 min-h-[44px] shadow-card';
 
-export function Card({ children, onPress, className }: CardProps) {
-  const classes = [BASE_CLASSES, className].filter(Boolean).join(' ');
+export function Card({ children, onPress, elevated = false, className }: CardProps) {
+  const bgClass = elevated ? 'bg-surfaceElevated' : 'bg-surface';
+  const classes = [BASE_CLASSES, bgClass, className].filter(Boolean).join(' ');
 
   if (onPress) {
     return (
-      <Pressable onPress={onPress} className={classes}>
+      <Pressable onPress={onPress} className={`${classes} active:opacity-80`}>
         {children}
       </Pressable>
     );

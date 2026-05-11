@@ -13,9 +13,11 @@
 export const colors = {
   primary: '#B8862C',
   primaryDark: '#8C6620',
+  primaryLight: '#F5EDD9',
   accent: '#2D5F3F',
   bg: '#FAF6ED',
   surface: '#FFFFFF',
+  surfaceElevated: '#FFFDF7',
   ink: '#1A1A1A',
   inkSoft: '#4A4A4A',
   inkMute: '#7A7A7A',

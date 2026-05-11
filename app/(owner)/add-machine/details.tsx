@@ -11,11 +11,13 @@ import { router } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
 
+import { Button } from '@/components/ui/Button';
+import { InputField } from '@/components/ui/InputField';
 import { createLogger } from '@/lib/logger';
 import { colors } from '@/theme/colors';
 import { useAddMachineStore } from '@/stores/addMachineStore';
@@ -120,17 +122,21 @@ export default function AddMachineDetails() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top', 'bottom']}>
-      {/* Header */}
-      <View className="flex-row items-center gap-3 px-4 pt-4 pb-2">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-10 h-10 items-center justify-center rounded-full bg-surface border border-border"
-        >
-          <ArrowLeft size={18} color={colors.ink} />
-        </Pressable>
-        <View className="flex-1">
-          <Text className="text-ink-mute text-xs">Step 2 of 3</Text>
-          <Text className="text-ink text-lg font-bold">Machine details</Text>
+      {/* Header with progress bar */}
+      <View className="px-4 pt-4 pb-2">
+        <View className="flex-row gap-1.5 mb-4">
+          {[1, 2, 3].map((s) => (
+            <View key={s} className={`flex-1 h-1.5 rounded-full ${s <= 2 ? 'bg-primary' : 'bg-border'}`} />
+          ))}
+        </View>
+        <View className="flex-row items-center gap-3">
+          <Pressable
+            onPress={() => router.back()}
+            className="w-10 h-10 items-center justify-center rounded-full bg-surface border border-border shadow-card"
+          >
+            <ArrowLeft size={18} color={colors.ink} />
+          </Pressable>
+          <Text className="text-ink text-lg font-bold flex-1">Machine details</Text>
         </View>
       </View>
 
@@ -184,65 +190,57 @@ export default function AddMachineDetails() {
         )}
 
         {/* Model */}
-        <Text className="text-ink font-semibold text-sm mb-2">Model</Text>
         <Controller
           control={control}
           name="model"
           render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              placeholder="e.g. 575 DI"
-              placeholderTextColor={colors.inkMute}
+            <InputField
+              label="Model"
               value={value}
               onChangeText={onChange}
+              placeholder="e.g. 575 DI"
+              error={errors.model?.message}
             />
           )}
         />
-        {errors.model && (
-          <Text className="text-error text-xs mb-3">{errors.model.message}</Text>
-        )}
 
         {/* Year */}
-        <Text className="text-ink font-semibold text-sm mb-2">Year of purchase</Text>
-        <Controller
-          control={control}
-          name="yearOfPurchase"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              placeholder={`${CURRENT_YEAR}`}
-              placeholderTextColor={colors.inkMute}
-              keyboardType="numeric"
-              value={value ? String(value) : ''}
-              onChangeText={(t) => onChange(parseInt(t, 10) || 0)}
-            />
-          )}
-        />
-        {errors.yearOfPurchase && (
-          <Text className="text-error text-xs mb-3">{errors.yearOfPurchase.message}</Text>
-        )}
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="yearOfPurchase"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label="Year of purchase"
+                value={value ? String(value) : ''}
+                onChangeText={(t) => onChange(parseInt(t, 10) || 0)}
+                placeholder={`${CURRENT_YEAR}`}
+                keyboardType="numeric"
+                error={errors.yearOfPurchase?.message}
+              />
+            )}
+          />
+        </View>
 
         {/* Horsepower (optional) */}
-        <Text className="text-ink font-semibold text-sm mb-2">
-          Horsepower <Text className="text-ink-mute font-normal">(optional)</Text>
-        </Text>
-        <Controller
-          control={control}
-          name="horsepower"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-4"
-              placeholder="e.g. 50"
-              placeholderTextColor={colors.inkMute}
-              keyboardType="numeric"
-              value={value ? String(value) : ''}
-              onChangeText={(t) => {
-                const n = parseFloat(t);
-                onChange(isNaN(n) ? undefined : n);
-              }}
-            />
-          )}
-        />
+        <View className="mt-4 mb-4">
+          <Controller
+            control={control}
+            name="horsepower"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label="Horsepower (optional)"
+                value={value ? String(value) : ''}
+                onChangeText={(t) => {
+                  const n = parseFloat(t);
+                  onChange(isNaN(n) ? undefined : n);
+                }}
+                placeholder="e.g. 50"
+                keyboardType="numeric"
+              />
+            )}
+          />
+        </View>
 
         {/* Features */}
         <Text className="text-ink font-semibold text-sm mb-2">Features</Text>
@@ -266,55 +264,49 @@ export default function AddMachineDetails() {
         </View>
 
         {/* Title */}
-        <Text className="text-ink font-semibold text-sm mb-2">Listing title</Text>
         <Controller
           control={control}
           name="title"
           render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              placeholder="e.g. Mahindra 575 with Rotavator"
-              placeholderTextColor={colors.inkMute}
+            <InputField
+              label="Listing title"
               value={value}
               onChangeText={onChange}
+              placeholder="e.g. Mahindra 575 with Rotavator"
               maxLength={80}
+              error={errors.title?.message}
             />
           )}
         />
-        {errors.title && (
-          <Text className="text-error text-xs mb-3">{errors.title.message}</Text>
-        )}
 
         {/* Description */}
-        <Text className="text-ink font-semibold text-sm mb-2">Description (English)</Text>
-        <Controller
-          control={control}
-          name="descriptionEn"
-          render={({ field: { onChange, value } }) => (
-            <TextInput
-              className="bg-surface border border-border rounded-xl px-4 py-3 text-ink text-sm mb-1"
-              placeholder="Describe the machine's condition, attachments, and suitability."
-              placeholderTextColor={colors.inkMute}
-              value={value}
-              onChangeText={onChange}
-              multiline
-              numberOfLines={4}
-              maxLength={500}
-            />
-          )}
-        />
-        {errors.descriptionEn && (
-          <Text className="text-error text-xs mb-3">{errors.descriptionEn.message}</Text>
-        )}
+        <View className="mt-4">
+          <Controller
+            control={control}
+            name="descriptionEn"
+            render={({ field: { onChange, value } }) => (
+              <InputField
+                label="Description (English)"
+                value={value}
+                onChangeText={onChange}
+                placeholder="Describe the machine's condition, attachments, and suitability."
+                multiline
+                numberOfLines={4}
+                maxLength={500}
+                error={errors.descriptionEn?.message}
+              />
+            )}
+          />
+        </View>
       </ScrollView>
 
       <View className="px-4 pb-6">
-        <Pressable
+        <Button
+          label="Continue to pricing"
           onPress={() => void onSubmit()}
-          className="bg-primary rounded-2xl py-4 items-center min-h-[52px] justify-center"
-        >
-          <Text className="text-white font-bold text-base">Continue to pricing</Text>
-        </Pressable>
+          variant="primary"
+          size="lg"
+        />
       </View>
     </SafeAreaView>
   );

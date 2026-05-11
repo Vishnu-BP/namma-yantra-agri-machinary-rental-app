@@ -136,23 +136,24 @@ export default function Discover() {
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
       {/* Header */}
       <View className="px-4 pt-4 pb-3">
-        <Text className="text-ink text-2xl font-semibold">{t('discover.title')}</Text>
-        <View className="flex-row items-center mt-1">
+        <Text className="text-ink text-2xl font-bold">{t('discover.title')}</Text>
+        {/* Location pill */}
+        <View className="flex-row items-center gap-1.5 bg-surface border border-border rounded-full px-3 py-1.5 mt-2 self-start">
           <MapPin size={14} color={colors.inkSoft} />
-          <Text className="text-ink-soft text-sm ml-1">
-            {profile?.village ?? 'Karnataka'}, {profile?.district ?? ''}
+          <Text className="text-ink-soft text-sm">
+            {profile?.village ?? 'Karnataka'}{profile?.district ? `, ${profile.district}` : ''}
           </Text>
         </View>
       </View>
 
-      {/* Category filter pills */}
-      <View className="px-4">
+      {/* Category filter pills + separator */}
+      <View className="border-b border-border pb-3">
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
           data={FILTER_OPTIONS}
           keyExtractor={(opt) => opt.value}
-          contentContainerClassName="gap-2"
+          contentContainerClassName="gap-2 px-4"
           renderItem={({ item }) => {
             const active = filter === item.value;
             const Icon = item.icon;
@@ -161,7 +162,7 @@ export default function Discover() {
                 onPress={() => handleSelectFilter(item.value)}
                 className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full border min-h-[44px] ${
                   active
-                    ? 'bg-primary border-primary'
+                    ? 'bg-primary border-primary shadow-card'
                     : 'bg-surface border-border'
                 }`}
               >
@@ -184,7 +185,7 @@ export default function Discover() {
 
       {/* Body */}
       {machinesQuery.isLoading ? (
-        <LoadingState subtitle="Finding machines near you…" />
+        <LoadingState layout="card-list" count={4} />
       ) : sortedMachines.length === 0 ? (
         <EmptyState
           icon={CircleHelp}
