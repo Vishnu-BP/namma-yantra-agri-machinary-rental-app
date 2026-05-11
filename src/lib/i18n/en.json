@@ -11,7 +11,26 @@
     "delete": "Delete",
     "edit": "Edit",
     "publish": "Publish listing",
-    "optional": "optional"
+    "optional": "optional",
+    "skip": "Skip",
+    "close": "Close",
+    "saving": "Saving…",
+    "tryAgain": "Please try again."
+  },
+  "onboarding": {
+    "slide1": {
+      "title": "Rent farm machinery near you",
+      "body": "Find tractors, harvesters, and tillers from owners in your district. Pay only for the hours you use."
+    },
+    "slide2": {
+      "title": "Earn from machinery you own",
+      "body": "List your tractor or implement and accept rental requests on your terms. We handle the schedule."
+    },
+    "slide3": {
+      "title": "AI-powered listings & pricing",
+      "body": "Auto-suggest fair prices, generate listings, and answer renter questions in English or Kannada."
+    },
+    "getStarted": "Get Started"
   },
   "auth": {
     "title": "Welcome back",
@@ -24,13 +43,26 @@
     "google": "Continue with Google",
     "github": "Continue with GitHub",
     "roleSelect": {
-      "title": "What will you do on Namma-Yantra?",
+      "title": "Tell us about yourself",
+      "subtitle": "A few quick details so we can match you with nearby machines or renters.",
+      "iWantTo": "I want to",
+      "rentMachinery": "Rent machinery",
+      "listMachinery": "List my machinery",
+      "both": "Both",
       "owner": "I rent out my machines",
       "renter": "I rent machines from owners",
-      "both": "Both",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Your full name",
       "name": "Your name",
       "village": "Village",
+      "villagePlaceholder": "Village name",
       "district": "District",
+      "districtPlaceholder": "Select a district",
+      "selectDistrict": "Select district",
+      "searchDistrict": "Search districts…",
+      "noDistrictFound": "No district found",
+      "continue": "Continue",
+      "errorTitle": "Could not save profile",
       "createProfile": "Create profile"
     }
   },
@@ -142,7 +174,10 @@
     "english": "English",
     "kannada": "ಕನ್ನಡ",
     "signOut": "Sign out",
-    "signOutFailed": "Sign out failed"
+    "signOutFailed": "Sign out failed",
+    "name": "Name",
+    "location": "Location",
+    "role": "Role"
   },
   "ai": {
     "suggestPrice": "Suggest a fair price",
