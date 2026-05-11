@@ -8,14 +8,23 @@
  * `useAuthListener` runs on every app start to hydrate `authStore` from
  * the persisted Supabase session and subscribe to subsequent auth events.
  * Page screens read from the store; this layout never renders them itself.
+ *
+ * Also hosts the app-wide Toaster (sonner-native) and offline banner
+ * so they render above all routes without needing per-screen wiring.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Text, View } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Toaster } from 'sonner-native';
 
 import '../global.css';
+import '@/lib/i18n';
 import { useAuthListener } from '@/hooks/useAuthListener';
 import { createLogger } from '@/lib/logger';
 
@@ -47,6 +56,7 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
         <RootStack />
+        <Toaster />
       </QueryClientProvider>
     </SafeAreaProvider>
   );
@@ -57,9 +67,28 @@ export default function RootLayout() {
 // gets added) without polluting the providers themselves.
 function RootStack() {
   useAuthListener();
+  const { t } = useTranslation();
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const offline = state.isConnected === false;
+      if (offline !== isOffline) {
+        log.info('Network state changed', { isConnected: state.isConnected });
+      }
+      setIsOffline(offline);
+    });
+    return unsubscribe;
+  }, [isOffline]);
+
   return (
     <>
       <StatusBar style="dark" />
+      {isOffline && (
+        <View className="bg-error px-4 py-2 items-center">
+          <Text className="text-white text-xs font-medium">{t('errors.offline')}</Text>
+        </View>
+      )}
       <Stack screenOptions={{ headerShown: false }} />
     </>
   );

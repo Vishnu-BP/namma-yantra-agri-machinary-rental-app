@@ -15,6 +15,7 @@
 import { useEffect } from 'react';
 
 import { auth, supabase } from '@/integrations/supabase';
+import i18n from '@/lib/i18n';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/stores/authStore';
 import { useOnboardingStore } from '@/stores/onboardingStore';
@@ -46,6 +47,9 @@ export function useAuthListener(): void {
           const profile = await auth.getProfile(session.user.id);
           if (!cancelled) {
             setProfile(profile);
+            if (profile?.preferred_language) {
+              void i18n.changeLanguage(profile.preferred_language);
+            }
             log.info('Profile loaded', { hasProfile: !!profile });
           }
         } catch (err) {
@@ -76,6 +80,9 @@ export function useAuthListener(): void {
         try {
           const profile = await auth.getProfile(session.user.id);
           useAuthStore.setState({ session, profile });
+          if (profile?.preferred_language) {
+            void i18n.changeLanguage(profile.preferred_language);
+          }
           log.info('Profile loaded', { hasProfile: !!profile });
         } catch (err) {
           log.error('getProfile on state change failed', err);

@@ -14,6 +14,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Text, View } from 'react-native';
 
 import { useAvailability } from '@/hooks/useAvailability';
@@ -35,6 +36,7 @@ export function AvailabilityBadge({
   initialValue,
   size = 'sm',
 }: AvailabilityBadgeProps) {
+  const { t } = useTranslation();
   const { isAvailable, isLoading } = useAvailability(machineId, initialValue);
   const opacity = useSharedValue(1);
 
@@ -74,7 +76,7 @@ export function AvailabilityBadge({
             dotStyle,
           ]}
         />
-        <Text className={`${textCls} text-avail font-semibold`}>Available</Text>
+        <Text className={`${textCls} text-avail font-semibold`}>{t('machine.available')}</Text>
       </View>
     );
   }
@@ -82,7 +84,7 @@ export function AvailabilityBadge({
   return (
     <View className="flex-row items-center gap-1.5 bg-busy/20 px-2 py-1 rounded-full">
       <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.busy }} />
-      <Text className={`${textCls} text-ink-soft font-semibold`}>In use</Text>
+      <Text className={`${textCls} text-ink-soft font-semibold`}>{t('machine.inUse')}</Text>
     </View>
   );
 }

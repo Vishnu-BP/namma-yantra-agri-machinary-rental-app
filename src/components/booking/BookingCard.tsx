@@ -9,6 +9,7 @@
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { format } from 'date-fns';
 import { CheckCircle, XCircle } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Badge } from '@/components/ui/Badge';
 import type { BadgeVariant } from '@/components/ui/Badge';
@@ -28,12 +29,12 @@ interface BookingCardProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const STATUS_BADGE: Record<BookingStatus, { variant: BadgeVariant; label: string }> = {
-  pending: { variant: 'pending', label: 'Pending' },
-  accepted: { variant: 'accepted', label: 'Accepted' },
-  declined: { variant: 'declined', label: 'Declined' },
-  cancelled: { variant: 'cancelled', label: 'Cancelled' },
-  completed: { variant: 'completed', label: 'Completed' },
+const STATUS_VARIANT: Record<BookingStatus, BadgeVariant> = {
+  pending: 'pending',
+  accepted: 'accepted',
+  declined: 'declined',
+  cancelled: 'cancelled',
+  completed: 'completed',
 };
 
 function formatDateRange(start: string, end: string): string {
@@ -49,7 +50,8 @@ function formatDateRange(start: string, end: string): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function BookingCard({ booking, onAccept, onDecline, isResponding }: BookingCardProps) {
-  const badge = STATUS_BADGE[booking.status];
+  const { t } = useTranslation();
+  const badge = { variant: STATUS_VARIANT[booking.status], label: t(`booking.status.${booking.status}`) };
   const isPending = booking.status === 'pending';
   const showActions = isPending && (onAccept || onDecline);
 
@@ -72,7 +74,7 @@ export function BookingCard({ booking, onAccept, onDecline, isResponding }: Book
 
       {/* Duration unit + total */}
       <Text className="text-ink-mute text-xs mb-3 capitalize">
-        {booking.duration_unit} · {formatPaise(booking.total_paise)} total
+        {booking.duration_unit} · {formatPaise(booking.total_paise)} {t('booking.total')}
       </Text>
 
       {/* Notes */}
@@ -100,7 +102,7 @@ export function BookingCard({ booking, onAccept, onDecline, isResponding }: Book
                 ? <ActivityIndicator color={colors.surface} size="small" />
                 : <CheckCircle size={16} color={colors.surface} />
               }
-              <Text className="text-white font-semibold text-sm">Accept</Text>
+              <Text className="text-white font-semibold text-sm">{t('owner.accept')}</Text>
             </Pressable>
           )}
           {onDecline && (
@@ -113,7 +115,7 @@ export function BookingCard({ booking, onAccept, onDecline, isResponding }: Book
                 ? <ActivityIndicator color={colors.surface} size="small" />
                 : <XCircle size={16} color={colors.surface} />
               }
-              <Text className="text-white font-semibold text-sm">Decline</Text>
+              <Text className="text-white font-semibold text-sm">{t('owner.decline')}</Text>
             </Pressable>
           )}
         </View>

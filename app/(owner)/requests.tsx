@@ -6,6 +6,7 @@
  * (Pending / Accepted / Past). Pending bookings show Accept + Decline buttons.
  */
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ClipboardList } from 'lucide-react-native';
@@ -26,14 +27,15 @@ const log = createLogger('BOOKING');
 type FilterKey = 'pending' | 'accepted' | 'past';
 
 const FILTERS: { key: FilterKey; label: string; statuses: BookingStatus[] }[] = [
-  { key: 'pending', label: 'Pending', statuses: ['pending'] },
-  { key: 'accepted', label: 'Accepted', statuses: ['accepted'] },
-  { key: 'past', label: 'Past', statuses: ['declined', 'cancelled', 'completed'] },
+  { key: 'pending', label: 'owner.filters.pending', statuses: ['pending'] },
+  { key: 'accepted', label: 'owner.filters.accepted', statuses: ['accepted'] },
+  { key: 'past', label: 'owner.filters.past', statuses: ['declined', 'cancelled', 'completed'] },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function OwnerRequests() {
+  const { t } = useTranslation();
   const profile = useAuthStore((s) => s.profile);
   const [filter, setFilter] = useState<FilterKey>('pending');
   const [respondingId, setRespondingId] = useState<string | null>(null);
@@ -70,7 +72,7 @@ export default function OwnerRequests() {
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
       {/* Header */}
       <View className="px-4 pt-4 pb-2">
-        <Text className="text-ink text-2xl font-bold mb-4">Requests</Text>
+        <Text className="text-ink text-2xl font-bold mb-4">{t('owner.requests')}</Text>
 
         {/* Filter pills */}
         <View className="flex-row gap-2">
@@ -90,7 +92,7 @@ export default function OwnerRequests() {
                 <Text
                   className={`text-sm font-medium ${active ? 'text-white' : 'text-ink-soft'}`}
                 >
-                  {f.label}
+                  {t(f.label)}
                 </Text>
               </Pressable>
             );
@@ -128,12 +130,8 @@ export default function OwnerRequests() {
         ListEmptyComponent={
           <EmptyState
             icon={ClipboardList}
-            title="No requests here"
-            body={
-              filter === 'pending'
-                ? 'New booking requests will appear here. Make sure your machines are active.'
-                : 'No bookings in this category yet.'
-            }
+            title={t('owner.noRequests')}
+            body={t('owner.noRequestsBody')}
           />
         }
       />

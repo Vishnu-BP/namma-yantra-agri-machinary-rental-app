@@ -14,6 +14,7 @@
 
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -84,6 +85,7 @@ function StepHeader({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function BookMachine() {
+  const { t } = useTranslation();
   const { machineId } = useLocalSearchParams<{ machineId: string }>();
   const { data: machine, isLoading: machineLoading } = useMachine(machineId);
   const { data: activeBookings } = useMachineBookings(machineId);
@@ -145,7 +147,7 @@ export default function BookMachine() {
   if (step === 1) {
     return (
       <SafeAreaView className="flex-1 bg-bg" edges={['top', 'bottom']}>
-        <StepHeader step={1} title="Choose dates" onBack={() => router.back()} />
+        <StepHeader step={1} title={t('booking.chooseDates')} onBack={() => router.back()} />
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
           {/* Calendar */}
           <Calendar
@@ -171,7 +173,7 @@ export default function BookMachine() {
           />
 
           {/* Duration unit toggle */}
-          <Text className="text-ink font-semibold text-sm mb-2">Rental type</Text>
+          <Text className="text-ink font-semibold text-sm mb-2">{t('booking.rentalType')}</Text>
           <View className="flex-row gap-3 mb-4">
             {(['hourly', 'daily'] as const).map((unit) => (
               <Pressable
@@ -188,7 +190,7 @@ export default function BookMachine() {
                     durationUnit === unit ? 'text-white' : 'text-ink-soft'
                   }`}
                 >
-                  {unit}
+                  {t(`machine.${unit}`)}
                 </Text>
               </Pressable>
             ))}
@@ -198,7 +200,7 @@ export default function BookMachine() {
           {durationUnit === 'hourly' && (
             <View className="mb-4">
               <Text className="text-ink font-semibold text-sm mb-2">
-                Start hour: {startHour}:00
+                {t('booking.startHour', { h: startHour })}
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {Array.from({ length: MAX_START_HOUR - MIN_START_HOUR + 1 }, (_, i) => MIN_START_HOUR + i).map((h) => (
@@ -224,8 +226,8 @@ export default function BookMachine() {
           {durationUnit === 'hourly' && (
             <View className="mb-4">
               <Text className="text-ink font-semibold text-sm mb-2">
-                Duration: {Math.max(minHours, durationHours)} hr
-                {minHours > 1 && ` (min ${minHours} hr)`}
+                {t('booking.duration', { n: Math.max(minHours, durationHours) })}
+                {minHours > 1 && ` ${t('booking.minDuration', { n: minHours })}`}
               </Text>
               <View className="flex-row gap-2 flex-wrap">
                 {[2, 3, 4, 6, 8, 10, 12].filter((h) => h >= minHours).map((h) => (
@@ -250,7 +252,7 @@ export default function BookMachine() {
           {/* Price preview */}
           {pricing && selectedDate && (
             <View className="bg-surface rounded-2xl p-4 border border-border mb-4">
-              <Text className="text-ink-mute text-xs mb-1">Estimated total</Text>
+              <Text className="text-ink-mute text-xs mb-1">{t('booking.estimatedTotal')}</Text>
               <Text className="text-ink text-2xl font-bold">{formatPaise(pricing.totalPaise)}</Text>
               <Text className="text-ink-soft text-sm">{pricing.label}</Text>
             </View>
@@ -269,7 +271,7 @@ export default function BookMachine() {
             }`}
           >
             <Text className="text-white font-bold text-base">
-              {canProceedToStep2 ? 'Review booking' : 'Select a date'}
+              {canProceedToStep2 ? t('booking.reviewBooking') : t('booking.selectDate')}
             </Text>
           </Pressable>
         </View>
@@ -313,7 +315,7 @@ export default function BookMachine() {
 
     return (
       <SafeAreaView className="flex-1 bg-bg" edges={['top', 'bottom']}>
-        <StepHeader step={2} title="Review booking" onBack={() => setStep(1)} />
+        <StepHeader step={2} title={t('booking.reviewBooking')} onBack={() => setStep(1)} />
         <ScrollView className="flex-1" contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
           {/* Machine summary */}
           <View className="bg-surface rounded-2xl p-4 border border-border mb-4">
@@ -332,14 +334,14 @@ export default function BookMachine() {
           </View>
 
           {/* Renter note */}
-          <Text className="text-ink font-semibold text-sm mb-2">Note to owner (optional)</Text>
+          <Text className="text-ink font-semibold text-sm mb-2">{t('booking.noteToOwner')}</Text>
           <Controller
             control={control}
             name="renterNote"
             render={({ field: { onChange, value } }) => (
               <TextInput
                 className="bg-surface border border-border rounded-2xl p-4 text-ink text-sm mb-1"
-                placeholder="E.g. I'll need the rotavator attachment too."
+                placeholder={t('booking.notePlaceholder')}
                 placeholderTextColor={colors.inkMute}
                 value={value}
                 onChangeText={onChange}
@@ -353,7 +355,7 @@ export default function BookMachine() {
             <Text className="text-error text-xs mb-3">{errors.renterNote.message}</Text>
           )}
           <Text className="text-ink-mute text-xs mb-4">
-            The owner will be notified and can accept or decline.
+            {t('booking.ownerNotified')}
           </Text>
         </ScrollView>
 
@@ -366,7 +368,7 @@ export default function BookMachine() {
             {createBookingMutation.isPending ? (
               <ActivityIndicator color={colors.surface} />
             ) : (
-              <Text className="text-white font-bold text-base">Send request</Text>
+              <Text className="text-white font-bold text-base">{t('booking.sendRequest')}</Text>
             )}
           </Pressable>
         </View>
@@ -380,10 +382,10 @@ export default function BookMachine() {
     <SafeAreaView className="flex-1 bg-bg items-center justify-center px-6" edges={['top', 'bottom']}>
       <CheckCircle size={72} color={colors.accepted} />
       <Text className="text-ink text-2xl font-bold mt-6 mb-2 text-center">
-        Request sent!
+        {t('booking.requestSent')}
       </Text>
       <Text className="text-ink-soft text-base text-center mb-10">
-        The owner will review your request and respond shortly. You&apos;ll see the update in your Bookings tab.
+        {t('booking.requestSentBody')}
       </Text>
       <Pressable
         onPress={() => {
@@ -392,7 +394,7 @@ export default function BookMachine() {
         }}
         className="bg-primary rounded-2xl py-4 px-8 items-center min-h-[52px] justify-center w-full"
       >
-        <Text className="text-white font-bold text-base">View my bookings</Text>
+        <Text className="text-white font-bold text-base">{t('booking.viewMyBookings')}</Text>
       </Pressable>
       <Pressable
         onPress={() => {
@@ -401,7 +403,7 @@ export default function BookMachine() {
         }}
         className="mt-4 py-3"
       >
-        <Text className="text-primary font-semibold">Continue browsing</Text>
+        <Text className="text-primary font-semibold">{t('booking.continueBrowsing')}</Text>
       </Pressable>
     </SafeAreaView>
   );

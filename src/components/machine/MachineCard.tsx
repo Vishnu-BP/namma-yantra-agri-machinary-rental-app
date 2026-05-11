@@ -65,7 +65,7 @@ export function MachineCard({ machine, distanceKm, onPress }: MachineCardProps) 
   return (
     <Pressable
       onPress={onPress}
-      className="flex-row gap-3 p-3 bg-surface border border-border rounded-2xl min-h-[44px]"
+      className="flex-row gap-3 p-3 bg-surface border border-border rounded-2xl min-h-[44px] active:opacity-70"
     >
       {hasImage ? (
         <Image

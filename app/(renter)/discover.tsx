@@ -10,6 +10,7 @@
  * the seed-scale demo (≤50 machines) sorting client-side is fine.
  */
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   CircleHelp,
@@ -53,16 +54,17 @@ interface FilterOption {
 }
 
 const FILTER_OPTIONS: FilterOption[] = [
-  { value: 'all', label: 'All', icon: CircleHelp },
-  { value: 'tractor', label: 'Tractors', icon: Tractor },
-  { value: 'harvester', label: 'Harvesters', icon: Wheat },
-  { value: 'sprayer', label: 'Sprayers', icon: Droplets },
-  { value: 'tiller', label: 'Tillers', icon: Hammer },
+  { value: 'all', label: 'discover.filters.all', icon: CircleHelp },
+  { value: 'tractor', label: 'discover.filters.tractor', icon: Tractor },
+  { value: 'harvester', label: 'discover.filters.harvester', icon: Wheat },
+  { value: 'sprayer', label: 'discover.filters.sprayer', icon: Droplets },
+  { value: 'tiller', label: 'discover.filters.tiller', icon: Hammer },
 ];
 
 const FILTER_ICON_SIZE = 16;
 
 export default function Discover() {
+  const { t } = useTranslation();
   const profile = useAuthStore((s) => s.profile);
   const { coords } = useLocation();
   const [filter, setFilter] = useState<FilterValue>('all');
@@ -134,7 +136,7 @@ export default function Discover() {
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
       {/* Header */}
       <View className="px-4 pt-4 pb-3">
-        <Text className="text-ink text-2xl font-semibold">Discover</Text>
+        <Text className="text-ink text-2xl font-semibold">{t('discover.title')}</Text>
         <View className="flex-row items-center mt-1">
           <MapPin size={14} color={colors.inkSoft} />
           <Text className="text-ink-soft text-sm ml-1">
@@ -172,7 +174,7 @@ export default function Discover() {
                     active ? 'text-white' : 'text-ink'
                   }`}
                 >
-                  {item.label}
+                  {t(item.label)}
                 </Text>
               </Pressable>
             );
@@ -186,12 +188,8 @@ export default function Discover() {
       ) : sortedMachines.length === 0 ? (
         <EmptyState
           icon={CircleHelp}
-          title="No machines yet"
-          body={
-            filter === 'all'
-              ? 'Check back later — owners are still adding their listings.'
-              : 'No machines in this category right now. Try another filter.'
-          }
+          title={t('discover.empty')}
+          body={t('discover.emptyBody')}
         />
       ) : (
         <FlatList

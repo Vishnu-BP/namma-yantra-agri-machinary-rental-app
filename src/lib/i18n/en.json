@@ -1,0 +1,160 @@
+{
+  "common": {
+    "back": "Back",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry",
+    "delete": "Delete",
+    "edit": "Edit",
+    "publish": "Publish listing",
+    "optional": "optional"
+  },
+  "auth": {
+    "title": "Welcome back",
+    "subtitle": "Sign in or create an account",
+    "email": "Email address",
+    "otp": "Enter 6-digit code",
+    "sendOtp": "Send OTP",
+    "verify": "Verify",
+    "orContinueWith": "Or continue with",
+    "google": "Continue with Google",
+    "github": "Continue with GitHub",
+    "roleSelect": {
+      "title": "What will you do on Namma-Yantra?",
+      "owner": "I rent out my machines",
+      "renter": "I rent machines from owners",
+      "both": "Both",
+      "name": "Your name",
+      "village": "Village",
+      "district": "District",
+      "createProfile": "Create profile"
+    }
+  },
+  "discover": {
+    "title": "Discover",
+    "filters": {
+      "all": "All",
+      "tractor": "Tractors",
+      "harvester": "Harvesters",
+      "sprayer": "Sprayers",
+      "tiller": "Tillers",
+      "other": "Other"
+    },
+    "empty": "No machines nearby",
+    "emptyBody": "Try a different category or check back later.",
+    "kmAway": "{{km}} km away",
+    "mAway": "{{m}} m away"
+  },
+  "machine": {
+    "available": "Available",
+    "inUse": "In use",
+    "perHour": "/hr",
+    "perDay": "/day",
+    "minHours": "min {{n}} hrs",
+    "hourly": "Hourly",
+    "daily": "Daily",
+    "about": "About",
+    "pricing": "Pricing",
+    "owner": "Owner",
+    "rentals": "rental",
+    "rentals_plural": "rentals",
+    "requestRental": "Request rental",
+    "unavailable": "Currently unavailable",
+    "condition": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "fair": "Fair",
+      "needs_service": "Needs Service"
+    }
+  },
+  "booking": {
+    "request": "Request rental",
+    "chooseDates": "Choose dates",
+    "reviewBooking": "Review booking",
+    "selectDate": "Select a date",
+    "rentalType": "Rental type",
+    "startHour": "Start hour: {{h}}:00",
+    "duration": "Duration: {{n}} hr",
+    "minDuration": "(min {{n}} hr)",
+    "estimatedTotal": "Estimated total",
+    "noteToOwner": "Note to owner (optional)",
+    "notePlaceholder": "E.g. I'll need the rotavator attachment too.",
+    "ownerNotified": "The owner will be notified and can accept or decline.",
+    "sendRequest": "Send request",
+    "requestSent": "Request sent!",
+    "requestSentBody": "The owner will review your request and respond shortly. You'll see the update in your Bookings tab.",
+    "viewMyBookings": "View my bookings",
+    "continueBrowsing": "Continue browsing",
+    "bookingFailed": "Booking failed",
+    "total": "total",
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "declined": "Declined",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "bookings": {
+    "title": "My Bookings",
+    "empty": "No bookings yet",
+    "emptyBody": "Your booking history will appear here.",
+    "filters": {
+      "all": "All",
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "past": "Past"
+    }
+  },
+  "owner": {
+    "listings": "My Machines",
+    "addMachine": "Add",
+    "noMachines": "No machines yet",
+    "noMachinesBody": "Add your first machine to start receiving rental requests.",
+    "requests": "Requests",
+    "noRequests": "No requests yet",
+    "noRequestsBody": "Booking requests from renters will appear here.",
+    "accept": "Accept",
+    "decline": "Decline",
+    "filters": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "past": "Past"
+    },
+    "addMachineTitle": "Add machine",
+    "photos": "Add photos",
+    "details": "Machine details",
+    "pricingLocation": "Pricing & location",
+    "publishListing": "Publish listing",
+    "editMachine": "Edit",
+    "saveChanges": "Save changes",
+    "deleteListing": "Delete listing",
+    "dangerZone": "Danger zone",
+    "deleteWarning": "Deleting this listing removes all photos and cannot be undone."
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "english": "English",
+    "kannada": "ಕನ್ನಡ",
+    "signOut": "Sign out",
+    "signOutFailed": "Sign out failed"
+  },
+  "ai": {
+    "suggestPrice": "Suggest a fair price",
+    "writeDescription": "Write description for me",
+    "findMachine": "Find the right machine",
+    "generateReport": "Generate condition report",
+    "thinking": "Thinking...",
+    "unavailable": "AI suggestion unavailable. Please enter manually."
+  },
+  "errors": {
+    "offline": "You're offline. Some features may not work.",
+    "generic": "Something went wrong. Please try again.",
+    "imageUpload": "Image upload failed. Tap to retry."
+  }
+}

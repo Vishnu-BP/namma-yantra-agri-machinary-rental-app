@@ -8,6 +8,7 @@
  * about scope.
  */
 import { router, useLocalSearchParams } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   CircleHelp,
@@ -44,6 +45,7 @@ const CATEGORY_ICON: Record<MachineCategory, LucideIcon> = {
 };
 
 export default function MachineDetail() {
+  const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const machineQuery = useMachine(id);
 
@@ -70,9 +72,9 @@ export default function MachineDetail() {
       <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
         <EmptyState
           icon={CircleHelp}
-          title="Machine not found"
-          body="This listing may have been removed by the owner."
-          ctaLabel="Back to Discover"
+          title={t('common.error')}
+          body={t('errors.generic')}
+          ctaLabel={t('common.back')}
           onCtaPress={handleBack}
         />
       </SafeAreaView>
@@ -129,7 +131,7 @@ export default function MachineDetail() {
         {/* About */}
         {machine.description_en ? (
           <View className="px-4 mt-6">
-            <Text className="text-ink text-base font-semibold mb-2">About</Text>
+            <Text className="text-ink text-base font-semibold mb-2">{t('machine.about')}</Text>
             <Text className="text-ink-soft text-sm leading-6">
               {machine.description_en}
             </Text>
@@ -138,29 +140,29 @@ export default function MachineDetail() {
 
         {/* Pricing */}
         <View className="px-4 mt-6">
-          <Text className="text-ink text-base font-semibold mb-2">Pricing</Text>
+          <Text className="text-ink text-base font-semibold mb-2">{t('machine.pricing')}</Text>
           <View className="flex-row gap-3">
             <View className="flex-1 bg-surface border border-border rounded-xl p-3">
-              <Text className="text-ink-mute text-xs">Hourly</Text>
+              <Text className="text-ink-mute text-xs">{t('machine.hourly')}</Text>
               <Text className="text-ink text-lg font-semibold mt-1">
                 {formatPaise(machine.hourly_rate_paise)}
               </Text>
             </View>
             <View className="flex-1 bg-surface border border-border rounded-xl p-3">
-              <Text className="text-ink-mute text-xs">Daily</Text>
+              <Text className="text-ink-mute text-xs">{t('machine.daily')}</Text>
               <Text className="text-ink text-lg font-semibold mt-1">
                 {formatPaise(machine.daily_rate_paise)}
               </Text>
             </View>
           </View>
           <Text className="text-ink-mute text-xs mt-2">
-            Minimum {machine.minimum_hours} hours
+            {t('machine.minHours', { n: machine.minimum_hours })}
           </Text>
         </View>
 
         {/* Owner */}
         <View className="px-4 mt-6">
-          <Text className="text-ink text-base font-semibold mb-2">Owner</Text>
+          <Text className="text-ink text-base font-semibold mb-2">{t('machine.owner')}</Text>
           <View className="bg-surface border border-border rounded-xl p-3">
             <Text className="text-ink text-base font-medium">
               {machine.owner_name}
@@ -169,8 +171,8 @@ export default function MachineDetail() {
               {machine.owner_village}
             </Text>
             <Text className="text-ink-mute text-xs mt-1">
-              {machine.total_bookings} completed{' '}
-              {machine.total_bookings === 1 ? 'rental' : 'rentals'}
+              {machine.total_bookings}{' '}
+              {t('machine.rentals', { count: machine.total_bookings })}
             </Text>
           </View>
         </View>
@@ -191,7 +193,7 @@ export default function MachineDetail() {
           }`}
         >
           <Text className="text-white text-base font-semibold">
-            {machine.is_currently_available ? 'Request rental' : 'Currently unavailable'}
+            {machine.is_currently_available ? t('machine.requestRental') : t('machine.unavailable')}
           </Text>
         </Pressable>
       </View>

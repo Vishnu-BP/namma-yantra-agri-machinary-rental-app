@@ -7,6 +7,7 @@
  * Add Machine flow. Empty state is shown when the owner has no listings yet.
  */
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { Plus, Tractor } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
@@ -24,6 +25,7 @@ import type { Machine } from '@/types/database';
 const log = createLogger('UI');
 
 export default function OwnerListings() {
+  const { t } = useTranslation();
   const profile = useAuthStore((s) => s.profile);
   const { data: machines, isLoading, refetch } = useOwnerMachines(profile?.id);
 
@@ -51,13 +53,13 @@ export default function OwnerListings() {
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
       {/* Header */}
       <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
-        <Text className="text-ink text-xl font-bold">My Machines</Text>
+        <Text className="text-ink text-xl font-bold">{t('owner.listings')}</Text>
         <Pressable
           onPress={handleAddMachine}
           className="flex-row items-center gap-1.5 bg-primary px-4 py-2 rounded-xl min-h-[44px] justify-center"
         >
           <Plus size={16} color={colors.surface} />
-          <Text className="text-white font-semibold text-sm">Add</Text>
+          <Text className="text-white font-semibold text-sm">{t('owner.addMachine')}</Text>
         </Pressable>
       </View>
 
@@ -78,9 +80,9 @@ export default function OwnerListings() {
         ListEmptyComponent={
           <EmptyState
             icon={Tractor}
-            title="No machines yet"
-            body="Add your first machine to start receiving rental requests."
-            ctaLabel="Add machine"
+            title={t('owner.noMachines')}
+            body={t('owner.noMachinesBody')}
+            ctaLabel={t('owner.addMachineTitle')}
             onCtaPress={handleAddMachine}
           />
         }
