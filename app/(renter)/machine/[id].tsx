@@ -175,19 +175,24 @@ export default function MachineDetail() {
         </View>
       </ScrollView>
 
-      {/* Disabled CTA — booking opens in L3 */}
+      {/* CTA — routes to booking flow */}
       <View className="absolute bottom-0 left-0 right-0 bg-surface border-t border-border p-4 pb-6">
         <Pressable
-          disabled
-          className="bg-busy rounded-xl py-4 items-center min-h-[44px] justify-center"
+          onPress={() => {
+            log.info('Machine detail: request rental tapped', { machineId: machine.id });
+            router.push(
+              `/(renter)/book/${machine.id}` as unknown as Parameters<typeof router.push>[0],
+            );
+          }}
+          disabled={!machine.is_currently_available}
+          className={`rounded-xl py-4 items-center min-h-[44px] justify-center ${
+            machine.is_currently_available ? 'bg-primary' : 'bg-busy'
+          }`}
         >
           <Text className="text-white text-base font-semibold">
-            Request rental
+            {machine.is_currently_available ? 'Request rental' : 'Currently unavailable'}
           </Text>
         </Pressable>
-        <Text className="text-ink-mute text-xs text-center mt-2">
-          Booking opens in Layer 3
-        </Text>
       </View>
     </SafeAreaView>
   );

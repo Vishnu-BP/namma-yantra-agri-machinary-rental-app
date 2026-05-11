@@ -58,8 +58,9 @@ export default function RenterLayout() {
       {/* Why: hide the (renter)/index route from the tab bar — it just
           redirects to /discover so old links keep working. */}
       <Tabs.Screen name="index" options={{ href: null }} />
-      {/* Why: machine/[id] is a sub-route accessed via push; not a tab. */}
+      {/* Why: machine/[id] and book/[machineId] are sub-routes accessed via push; not tabs. */}
       <Tabs.Screen name="machine/[id]" options={{ href: null }} />
+      <Tabs.Screen name="book/[machineId]" options={{ href: null }} />
     </Tabs>
   );
 }

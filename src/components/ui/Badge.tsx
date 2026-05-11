@@ -14,7 +14,9 @@ export type BadgeVariant =
   | 'busy'
   | 'pending'
   | 'accepted'
-  | 'declined';
+  | 'declined'
+  | 'cancelled'
+  | 'completed';
 
 interface BadgeProps {
   variant: BadgeVariant;
@@ -31,6 +33,8 @@ const VARIANT_CLASSES: Record<BadgeVariant, { bg: string; text: string }> = {
   pending: { bg: 'bg-pending', text: 'text-white' },
   accepted: { bg: 'bg-accent', text: 'text-white' },
   declined: { bg: 'bg-error', text: 'text-white' },
+  cancelled: { bg: 'bg-busy', text: 'text-white' },
+  completed: { bg: 'bg-accent', text: 'text-white' },
 };
 
 const ICON_SIZE = 12;
