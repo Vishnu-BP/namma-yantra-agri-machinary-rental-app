@@ -73,19 +73,21 @@ export function useNavigationGuard(): void {
     const targetSeg = targetGroup(target);
     const activeSeg = segments[0] ?? null;
 
-    // Already inside the right group — nothing to do.
-    if (targetSeg && activeSeg === targetSeg) {
-      lastTargetRef.current = target;
-      return;
-    }
-
-    // For role-select (a leaf route under (auth)), require BOTH the group
-    // and the leaf to match.
+    // Why: role-select is a leaf inside (auth). The user is "already there"
+    // ONLY if both the group AND the leaf match — otherwise a fresh signup
+    // sitting on /(auth) would never get pushed to /(auth)/role-select.
+    // Check this BEFORE the generic group-match below.
     if (target === '/(auth)/role-select') {
-      if (activeSeg === '(auth)' && segments[1] === 'role-select') {
+      const onRoleSelect = activeSeg === '(auth)' && segments[1] === 'role-select';
+      if (onRoleSelect) {
         lastTargetRef.current = target;
         return;
       }
+      // Fall through to the replace below.
+    } else if (targetSeg && activeSeg === targetSeg) {
+      // Already inside the right top-level group — nothing to do.
+      lastTargetRef.current = target;
+      return;
     }
 
     if (lastTargetRef.current === target) return;
