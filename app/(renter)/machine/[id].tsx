@@ -50,7 +50,13 @@ const CATEGORY_ICON: Record<MachineCategory, LucideIcon> = {
 export default function MachineDetail() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  log.info('Machine detail: mount start', { id });
   const machineQuery = useMachine(id);
+  log.info('Machine detail: query state', {
+    isLoading: machineQuery.isLoading,
+    hasData: !!machineQuery.data,
+    isError: machineQuery.isError,
+  });
 
   useEffect(() => {
     log.info('Machine detail: page visited');

@@ -22,9 +22,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 
-import { auth, supabase } from '@/integrations/supabase';
+import { supabase } from '@/integrations/supabase';
 import { createLogger } from '@/lib/logger';
-import { useAuthStore } from '@/stores/authStore';
 import { colors } from '@/theme/colors';
 
 const log = createLogger('AUTH');
@@ -45,30 +44,6 @@ type CallbackParams = {
  * on native (no `window`) and when the fragment has none of the expected
  * keys.
  */
-/**
- * After a successful sign-in (session is set in the supabase client),
- * fetch the profile and navigate to the right destination. Existing user
- * with a profile → their role's home. Fresh user → role-select.
- * Mirrors the helper in (auth)/index.tsx so the OAuth callback navigates
- * correctly without relying on a guard or app/index.tsx dispatcher.
- */
-async function navigateAfterAuth(): Promise<void> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session?.user) {
-    log.warn('OAuth callback: no session after sign-in');
-    router.replace('/(auth)');
-    return;
-  }
-  const profile = await auth.getProfile(session.user.id);
-  useAuthStore.setState({ session, profile });
-  if (!profile) {
-    router.replace('/(auth)/role-select');
-    return;
-  }
-  router.replace(profile.role === 'owner' ? '/(owner)' : '/(renter)');
-}
 
 function readFragmentParams(): CallbackParams {
   if (Platform.OS !== 'web' || typeof window === 'undefined') return {};
@@ -98,7 +73,7 @@ export default function OAuthCallback() {
         } = await supabase.auth.getSession();
         if (existing) {
           log.info('OAuth callback: session already present, bouncing');
-          await navigateAfterAuth();
+          // Navigation guard handles routing once the SIGNED_IN event fires.
           return;
         }
 
@@ -134,7 +109,7 @@ export default function OAuthCallback() {
           );
           if (error) throw error;
           log.info('OAuth callback: PKCE exchanged');
-          await navigateAfterAuth();
+          // Navigation guard handles routing once the SIGNED_IN event fires.
           return;
         }
 
@@ -145,7 +120,7 @@ export default function OAuthCallback() {
           });
           if (error) throw error;
           log.info('OAuth callback: implicit session set');
-          await navigateAfterAuth();
+          // Navigation guard handles routing once the SIGNED_IN event fires.
           return;
         }
 

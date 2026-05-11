@@ -177,15 +177,20 @@
     "signOutFailed": "Sign out failed",
     "name": "Name",
     "location": "Location",
-    "role": "Role"
+    "role": "Role",
+    "viewMode": "View as",
+    "viewAsRenter": "Renter",
+    "viewAsOwner": "Owner"
   },
   "ai": {
-    "suggestPrice": "Suggest a fair price",
-    "writeDescription": "Write description for me",
-    "findMachine": "Find the right machine",
-    "generateReport": "Generate condition report",
-    "thinking": "Thinking...",
-    "unavailable": "AI suggestion unavailable. Please enter manually."
+    "chatTitle": "Namma-Yantra Assistant",
+    "chatSubtitle": "Ask anything about machinery, bookings, or the app",
+    "placeholder": "Type a message…",
+    "welcome": "How can I help today?",
+    "welcomeBody": "Ask about renting a tractor, listing your machine, pricing, or anything else about the app.",
+    "errorTitle": "Could not get a reply",
+    "send": "Send",
+    "thinking": "Thinking…"
   },
   "errors": {
     "offline": "You're offline. Some features may not work.",

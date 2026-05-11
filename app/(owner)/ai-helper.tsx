@@ -1,5 +1,5 @@
 /**
- * @file (renter)/ai-helper.tsx — AI Helper tab in the renter shell.
+ * @file (owner)/ai-helper.tsx — AI Helper tab in the owner shell.
  * @module app
  *
  * Thin route-file wrapper around the shared `ChatScreen` so the renter
@@ -8,6 +8,6 @@
  */
 import { ChatScreen } from '@/components/ai/ChatScreen';
 
-export default function RenterAIHelper() {
-  return <ChatScreen pageTag="AIHelper(renter)" />;
+export default function OwnerAIHelper() {
+  return <ChatScreen pageTag="AIHelper(owner)" />;
 }

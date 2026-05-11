@@ -51,7 +51,7 @@ function SkeletonBox({
   return (
     <Animated.View
       style={[style, width !== undefined ? { width } : undefined, height !== undefined ? { height } : undefined]}
-      className={`bg-primaryLight rounded-lg ${extraClass}`}
+      className={`bg-primary-light rounded-lg ${extraClass}`}
     />
   );
 }

@@ -5,7 +5,7 @@
  * Three tabs: Machines (L4), Requests (L3), Profile.
  */
 import { Tabs } from 'expo-router';
-import { ClipboardList, Tractor, User } from 'lucide-react-native';
+import { ClipboardList, Sparkles, Tractor, User } from 'lucide-react-native';
 
 import { colors } from '@/theme/colors';
 
@@ -36,6 +36,13 @@ export default function OwnerLayout() {
         options={{
           title: 'Requests',
           tabBarIcon: ({ color }) => <ClipboardList size={TAB_ICON_SIZE} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="ai-helper"
+        options={{
+          title: 'AI Helper',
+          tabBarIcon: ({ color }) => <Sparkles size={TAB_ICON_SIZE} color={color} />,
         }}
       />
       <Tabs.Screen

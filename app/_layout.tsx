@@ -25,7 +25,10 @@ import { Toaster } from 'sonner-native';
 
 import '../global.css';
 import '@/lib/i18n';
+import '@/lib/nativewind-interop';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useAuthListener } from '@/hooks/useAuthListener';
+import { useNavigationGuard } from '@/hooks/useNavigationGuard';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('NAV');
@@ -55,7 +58,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <RootStack />
+        <ErrorBoundary>
+          <RootStack />
+        </ErrorBoundary>
         <Toaster />
       </QueryClientProvider>
     </SafeAreaProvider>
@@ -64,9 +69,12 @@ export default function RootLayout() {
 
 // Why: separate component so `useAuthListener` runs inside the
 // QueryClientProvider tree (in case a future TanStack-backed listener
-// gets added) without polluting the providers themselves.
+// gets added) without polluting the providers themselves. The navigation
+// guard runs alongside it — it reacts to store changes and replaces the
+// route whenever the dispatcher's decision changes.
 function RootStack() {
   useAuthListener();
+  useNavigationGuard();
   const { t } = useTranslation();
   const [isOffline, setIsOffline] = useState(false);
 

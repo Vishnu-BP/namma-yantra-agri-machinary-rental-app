@@ -24,6 +24,7 @@ export default function Index() {
   const isAuthHydrated = useAuthStore((s) => s.isHydrated);
   const session = useAuthStore((s) => s.session);
   const profile = useAuthStore((s) => s.profile);
+  const viewMode = useAuthStore((s) => s.viewMode);
 
   const hasSeenOnboarding = useOnboardingStore((s) => s.hasSeenOnboarding);
 
@@ -31,6 +32,7 @@ export default function Index() {
     isAuthHydrated,
     session,
     profile,
+    viewMode,
     hasSeenOnboarding,
   });
 

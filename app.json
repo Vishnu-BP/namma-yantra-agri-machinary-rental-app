@@ -5,7 +5,7 @@
     "owner": "vishnu_bp",
     "version": "0.1.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/favicon.jpeg",
     "scheme": "nammayantra",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
@@ -17,9 +17,7 @@
       "package": "com.vishnu.nammayantra",
       "adaptiveIcon": {
         "backgroundColor": "#FAF6ED",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "foregroundImage": "./assets/images/favicon.jpeg"
       },
       "permissions": [
         "android.permission.ACCESS_FINE_LOCATION",

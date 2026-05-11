@@ -3,13 +3,17 @@
  * @module app
  *
  * Reached only when there's an authenticated session but no `profiles`
- * row yet. Captures role + display name + village + district, inserts
- * the profile via RLS-protected `createProfile`, then bounces through
- * the root dispatcher which routes to the correct role home.
+ * row yet. Captures display name + village + district and inserts the
+ * profile via RLS-protected `createProfile` with `role='both'` baked in
+ * — every new user can rent and list. Renter/owner UI is chosen later
+ * from the Profile screen via the view-mode toggle.
+ *
+ * After insert, the navigation guard (mounted in _layout.tsx) detects
+ * the new `session && profile` state and routes the user to their
+ * default home — no manual `router.replace()` here.
  */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
-import { ChevronDown, ShoppingCart, Tractor, Users } from 'lucide-react-native';
+import { ChevronDown } from 'lucide-react-native';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import {
@@ -37,22 +41,11 @@ import { colors } from '@/theme/colors';
 const log = createLogger('AUTH');
 
 const schema = z.object({
-  role: z.enum(['renter', 'owner', 'both']),
   display_name: z.string().min(2, 'Enter your full name'),
   village: z.string().min(2, 'Enter your village'),
   district: z.string().min(1, 'Select a district'),
 });
 type FormValues = z.infer<typeof schema>;
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-type RoleOption = { value: FormValues['role']; labelKey: string; icon: typeof Tractor };
-
-const ROLE_OPTIONS: RoleOption[] = [
-  { value: 'renter', labelKey: 'auth.roleSelect.rentMachinery', icon: ShoppingCart },
-  { value: 'owner', labelKey: 'auth.roleSelect.listMachinery', icon: Tractor },
-  { value: 'both', labelKey: 'auth.roleSelect.both', icon: Users },
-];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -78,14 +71,12 @@ export default function RoleSelect() {
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      role: 'renter',
       display_name: '',
       village: '',
       district: '',
     },
   });
 
-  const role = watch('role');
   const district = watch('district');
 
   const filteredDistricts = useMemo(
@@ -105,21 +96,24 @@ export default function RoleSelect() {
   }
 
   const onSubmit = async (data: FormValues) => {
-    log.info('Role-select: submit tapped', { role: data.role });
+    log.info('Role-select: submit tapped');
     setBusy(true);
     try {
+      // Why: every new user is created with role='both' so they can both
+      // rent and list. The view-mode toggle in Profile lets them pick
+      // which UI to see. No "I want to" question at signup.
       const profile = await auth.createProfile({
         id: session.user.id,
-        role: data.role,
+        role: 'both',
         display_name: data.display_name,
         village: data.village,
         district: data.district,
       });
-      log.info('Role-select: profile created', { role: profile.role });
+      log.info('Role-select: profile created');
       setProfile(profile);
-      // Why: navigate directly to the chosen role's home. We just got the
-      // profile back so we know exactly which group to land in.
-      router.replace(profile.role === 'owner' ? '/(owner)' : '/(renter)');
+      // Why: navigation guard (mounted in _layout.tsx) sees the new
+      // session+profile pair and routes to renter home automatically.
+      // No manual router.replace() — single source of truth.
     } catch (err) {
       log.error('createProfile UI', err);
       Alert.alert(
@@ -133,7 +127,6 @@ export default function RoleSelect() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg">
-      {/* Why: same responsive pattern as (auth)/index.tsx — see that file's note. */}
       <ScrollView
         className="flex-1 px-6 sm:px-8 md:max-w-2xl md:mx-auto md:w-full md:px-12 lg:max-w-3xl"
         contentContainerClassName="pb-12 sm:py-4 lg:py-8"
@@ -145,41 +138,6 @@ export default function RoleSelect() {
         <Text className="text-ink-soft text-base mb-8">
           {t('auth.roleSelect.subtitle')}
         </Text>
-
-        {/* ── Role chips ── */}
-        <Text className="text-ink-soft text-sm font-medium mb-3">
-          {t('auth.roleSelect.iWantTo')}
-        </Text>
-        <View className="flex-row gap-2 mb-6">
-          {ROLE_OPTIONS.map((opt) => {
-            const selected = role === opt.value;
-            const RoleIcon = opt.icon;
-            return (
-              <Pressable
-                key={opt.value}
-                onPress={() => {
-                  log.info('Role-select: role chosen', { role: opt.value });
-                  setValue('role', opt.value);
-                }}
-                className={`flex-1 rounded-2xl py-4 items-center border-2 min-h-[72px] justify-center gap-1.5 ${
-                  selected
-                    ? 'bg-primary border-primary shadow-cta'
-                    : 'bg-surface border-border shadow-card'
-                }`}
-              >
-                <RoleIcon size={20} color={selected ? '#FFFFFF' : colors.primary} />
-                <Text
-                  className={`font-semibold text-xs text-center ${
-                    selected ? 'text-white' : 'text-ink'
-                  }`}
-                  numberOfLines={2}
-                >
-                  {t(opt.labelKey)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
 
         {/* ── Form fields ── */}
         <Controller

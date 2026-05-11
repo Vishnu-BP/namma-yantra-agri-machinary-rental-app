@@ -1,5 +1,5 @@
 /**
- * @file routes.ts — route path constants, organized hierarchically.
+ * @file routes.ts — route path constants + helpers.
  * @module src/navigation
  *
  * Three levels of structure:
@@ -11,6 +11,10 @@
  * inference (from `experiments.typedRoutes: true` in app.json) accepts
  * these wherever it accepts string literals.
  */
+import type { Profile } from '@/types/database';
+
+import type { ViewMode } from '@/stores/authStore';
+
 export const ROUTES = {
   // ─── Level 0: root dispatcher ───────────────────────────────────────
   ROOT: '/',
@@ -32,3 +36,20 @@ export const ROUTES = {
     // L3-L4 will add: REQUESTS, ADD_MACHINE, LISTINGS.
   },
 } as const;
+
+/**
+ * Resolve which post-auth shell a given user should land in.
+ *
+ * - If the user has explicitly chosen a `viewMode` (via the Profile toggle),
+ *   that wins.
+ * - Otherwise, fall back to their DB role: owners go owner-side, everyone
+ *   else (renter or both) goes renter-side. This matches pre-existing
+ *   default behavior.
+ *
+ * Pure function — no React, no router, no store. Caller passes both inputs.
+ */
+export function getHomeRoute(profile: Profile, viewMode: ViewMode): string {
+  const effective: 'owner' | 'renter' =
+    viewMode ?? (profile.role === 'owner' ? 'owner' : 'renter');
+  return effective === 'owner' ? ROUTES.OWNER.HOME : ROUTES.RENTER.HOME;
+}

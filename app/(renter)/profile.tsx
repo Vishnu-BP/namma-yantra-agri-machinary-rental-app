@@ -6,15 +6,17 @@
  * preference to the profiles table, and sign-out. Language is switched via
  * i18n.changeLanguage() so all t() calls re-render without a full reload.
  */
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import { LogOut, MapPin, Tag, User } from 'lucide-react-native';
+import { LogOut, MapPin, ShoppingCart, Tag, Tractor, User } from 'lucide-react-native';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
+import { VIEW_MODE_STORAGE_KEY } from '@/hooks/useAuthListener';
 import { auth, supabase } from '@/integrations/supabase';
 import i18n from '@/lib/i18n';
 import { createLogger } from '@/lib/logger';
@@ -27,10 +29,22 @@ const authLog = createLogger('AUTH');
 export default function Profile() {
   const { t } = useTranslation();
   const profile = useAuthStore((s) => s.profile);
+  const setViewMode = useAuthStore((s) => s.setViewMode);
 
   useEffect(() => {
     log.info('Profile: page visited');
   }, []);
+
+  const handleSwitchToOwner = async () => {
+    log.info('Profile: view mode switched', { mode: 'owner' });
+    setViewMode('owner');
+    try {
+      await AsyncStorage.setItem(VIEW_MODE_STORAGE_KEY, 'owner');
+    } catch (err) {
+      log.error('viewMode persist failed', err);
+    }
+    router.replace('/(owner)');
+  };
 
   const handleSignOut = async () => {
     authLog.info('Profile: sign-out tapped');
@@ -143,6 +157,33 @@ export default function Profile() {
                   }`}
                 >
                   {t('profile.kannada')}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* ── View-mode toggle — flip between renter/owner shells ── */}
+          <View className="bg-surface border border-border rounded-2xl shadow-card p-4 mb-6">
+            <Text className="text-ink-soft text-sm font-medium mb-3">
+              {t('profile.viewMode')}
+            </Text>
+            <View className="flex-row gap-3">
+              <Pressable
+                disabled
+                className="flex-1 py-3 rounded-xl items-center border-2 bg-primary border-primary shadow-cta flex-row justify-center gap-2"
+              >
+                <ShoppingCart size={16} color="white" />
+                <Text className="text-white font-semibold text-sm">
+                  {t('profile.viewAsRenter')}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={handleSwitchToOwner}
+                className="flex-1 py-3 rounded-xl items-center border-2 bg-surface border-border active:opacity-70 flex-row justify-center gap-2"
+              >
+                <Tractor size={16} color={colors.inkSoft} />
+                <Text className="text-ink-soft font-semibold text-sm">
+                  {t('profile.viewAsOwner')}
                 </Text>
               </Pressable>
             </View>

@@ -12,19 +12,27 @@
  * - Returning anything from this hook would tempt callers to use it
  *   like a React Query observer, which it isn't.
  */
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
 
 import { auth, supabase } from '@/integrations/supabase';
 import i18n from '@/lib/i18n';
 import { createLogger } from '@/lib/logger';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore, type ViewMode } from '@/stores/authStore';
 import { useOnboardingStore } from '@/stores/onboardingStore';
 
 const log = createLogger('AUTH');
 
+export const VIEW_MODE_STORAGE_KEY = 'nammayantra:viewMode';
+
+function isViewMode(v: string | null): v is Exclude<ViewMode, null> {
+  return v === 'owner' || v === 'renter';
+}
+
 export function useAuthListener(): void {
   const setSession = useAuthStore((s) => s.setSession);
   const setProfile = useAuthStore((s) => s.setProfile);
+  const setViewMode = useAuthStore((s) => s.setViewMode);
   const markHydrated = useAuthStore((s) => s.markHydrated);
   const clear = useAuthStore((s) => s.clear);
 
@@ -33,6 +41,19 @@ export function useAuthListener(): void {
     log.info('Auth listener subscribed');
 
     void (async () => {
+      // Why: hydrate the persisted view-mode preference BEFORE marking
+      // hydrated, so the dispatcher's first render already knows whether
+      // a 'both' user (or anyone who toggled) wants the owner shell.
+      try {
+        const stored = await AsyncStorage.getItem(VIEW_MODE_STORAGE_KEY);
+        if (!cancelled && isViewMode(stored)) {
+          setViewMode(stored);
+          log.info('viewMode hydrated', { viewMode: stored });
+        }
+      } catch (err) {
+        log.error('viewMode hydrate failed', err);
+      }
+
       const {
         data: { session },
         error,
@@ -96,6 +117,10 @@ export function useAuthListener(): void {
       // post-logout, and post-reinstall all see onboarding again).
       clear();
       useOnboardingStore.getState().reset();
+      void AsyncStorage.removeItem(VIEW_MODE_STORAGE_KEY).catch(() => {
+        // Best-effort cleanup; if storage is unavailable we already
+        // cleared the in-memory copy via clear().
+      });
       log.info('Sign-out cleanup done (auth + onboarding cleared)');
     });
 
@@ -103,5 +128,5 @@ export function useAuthListener(): void {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, [setSession, setProfile, markHydrated, clear]);
+  }, [setSession, setProfile, setViewMode, markHydrated, clear]);
 }

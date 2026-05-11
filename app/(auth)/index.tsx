@@ -7,7 +7,6 @@
  * new users, role home for returning users).
  */
 import { zodResolver } from '@hookform/resolvers/zod';
-import { router } from 'expo-router';
 import { Tractor } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -15,21 +14,11 @@ import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
-import { auth, supabase } from '@/integrations/supabase';
+import { auth } from '@/integrations/supabase';
 import { Button } from '@/components/ui/Button';
 import { InputField } from '@/components/ui/InputField';
 import { createLogger } from '@/lib/logger';
-import { useAuthStore } from '@/stores/authStore';
 import { colors } from '@/theme/colors';
-
-async function navigateAfterAuth(): Promise<void> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user) { router.replace('/(auth)'); return; }
-  const profile = await auth.getProfile(session.user.id);
-  useAuthStore.setState({ session, profile });
-  if (!profile) { router.replace('/(auth)/role-select'); return; }
-  router.replace(profile.role === 'owner' ? '/(owner)' : '/(renter)');
-}
 
 const log = createLogger('AUTH');
 
@@ -71,8 +60,9 @@ export default function Auth() {
     setBusy(true);
     try {
       await auth.verifyOtp(email, data.token);
-      log.info('Auth: OTP verified');
-      await navigateAfterAuth();
+      log.info('Auth: OTP verified — guard will route');
+      // Why: useAuthListener picks up the SIGNED_IN event, sets the
+      // store, and useNavigationGuard re-routes automatically.
     } catch (err) { log.error('verifyOtp UI', err); showError('Could not verify code', err); }
     finally { setBusy(false); }
   };
@@ -83,7 +73,8 @@ export default function Auth() {
     try {
       const ok = await fn();
       log.info('Auth: OAuth completed', { provider, completed: ok });
-      if (ok) await navigateAfterAuth();
+      // Why: navigation guard handles routing once the SIGNED_IN event
+      // fires from supabase-js — no manual replace needed here.
     } catch (err) { log.error(`${provider} UI`, err); showError('Sign in failed', err); }
     finally { setBusy(false); }
   };
