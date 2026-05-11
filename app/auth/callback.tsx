@@ -22,6 +22,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, Platform, View } from 'react-native';
 
+import { syncSessionAndProfile } from '@/hooks/useAuthListener';
 import { supabase } from '@/integrations/supabase';
 import { createLogger } from '@/lib/logger';
 import { colors } from '@/theme/colors';
@@ -73,7 +74,8 @@ export default function OAuthCallback() {
         } = await supabase.auth.getSession();
         if (existing) {
           log.info('OAuth callback: session already present, bouncing');
-          // Navigation guard handles routing once the SIGNED_IN event fires.
+          // Pre-sync so the guard routes the moment this useEffect resolves.
+          await syncSessionAndProfile();
           return;
         }
 
@@ -109,7 +111,8 @@ export default function OAuthCallback() {
           );
           if (error) throw error;
           log.info('OAuth callback: PKCE exchanged');
-          // Navigation guard handles routing once the SIGNED_IN event fires.
+          // Pre-sync so the guard routes the moment this useEffect resolves.
+          await syncSessionAndProfile();
           return;
         }
 
@@ -120,7 +123,8 @@ export default function OAuthCallback() {
           });
           if (error) throw error;
           log.info('OAuth callback: implicit session set');
-          // Navigation guard handles routing once the SIGNED_IN event fires.
+          // Pre-sync so the guard routes the moment this useEffect resolves.
+          await syncSessionAndProfile();
           return;
         }
 

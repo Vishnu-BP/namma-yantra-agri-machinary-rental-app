@@ -29,6 +29,41 @@ function isViewMode(v: string | null): v is Exclude<ViewMode, null> {
   return v === 'owner' || v === 'renter';
 }
 
+/**
+ * Fetch the current session + profile in one shot and atomically update
+ * authStore. Used by the auth screens (OTP verify, OAuth completion) to
+ * proactively sync state the moment auth resolves — bypassing the
+ * `onAuthStateChange` listener's async profile fetch so the navigation
+ * guard fires immediately instead of after a visible 100–500ms gap.
+ *
+ * The `onAuthStateChange` listener will run a duplicate setState shortly
+ * after with the same data — that's idempotent and harmless.
+ */
+export async function syncSessionAndProfile(): Promise<void> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session?.user) {
+    useAuthStore.setState({ session: null, profile: null });
+    return;
+  }
+
+  let profile = null;
+  try {
+    profile = await auth.getProfile(session.user.id);
+  } catch (err) {
+    log.error('syncSessionAndProfile: getProfile failed', err);
+  }
+
+  if (profile?.preferred_language) {
+    void i18n.changeLanguage(profile.preferred_language);
+  }
+
+  useAuthStore.setState({ session, profile });
+  log.info('syncSessionAndProfile complete', { hasProfile: !!profile });
+}
+
 export function useAuthListener(): void {
   const setSession = useAuthStore((s) => s.setSession);
   const setProfile = useAuthStore((s) => s.setProfile);

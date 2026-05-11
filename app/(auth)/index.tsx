@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { auth } from '@/integrations/supabase';
 import { Button } from '@/components/ui/Button';
 import { InputField } from '@/components/ui/InputField';
+import { syncSessionAndProfile } from '@/hooks/useAuthListener';
 import { createLogger } from '@/lib/logger';
 import { colors } from '@/theme/colors';
 
@@ -60,9 +61,12 @@ export default function Auth() {
     setBusy(true);
     try {
       await auth.verifyOtp(email, data.token);
+      // Why: proactively sync session+profile into the store so the
+      // navigation guard fires on the SAME tick the busy spinner stops.
+      // Otherwise the user briefly sees /(auth) while the SIGNED_IN
+      // listener races to fetch the profile in the background.
+      await syncSessionAndProfile();
       log.info('Auth: OTP verified — guard will route');
-      // Why: useAuthListener picks up the SIGNED_IN event, sets the
-      // store, and useNavigationGuard re-routes automatically.
     } catch (err) { log.error('verifyOtp UI', err); showError('Could not verify code', err); }
     finally { setBusy(false); }
   };
@@ -73,8 +77,10 @@ export default function Auth() {
     try {
       const ok = await fn();
       log.info('Auth: OAuth completed', { provider, completed: ok });
-      // Why: navigation guard handles routing once the SIGNED_IN event
-      // fires from supabase-js — no manual replace needed here.
+      // Why: only sync if the user actually completed the flow (ok=true).
+      // Same rationale as OTP — pre-fetch profile so the guard routes
+      // immediately when busy=false, no visible /(auth) flash.
+      if (ok) await syncSessionAndProfile();
     } catch (err) { log.error(`${provider} UI`, err); showError('Sign in failed', err); }
     finally { setBusy(false); }
   };
