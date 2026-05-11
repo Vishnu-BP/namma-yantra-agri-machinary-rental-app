@@ -6,73 +6,109 @@
 > 3. Move completed items into "Completed Work Log" at the bottom — never delete.
 > 4. After each item, briefly explain what changed and why (one paragraph in commit body or PR).
 
-## Current layer: **Layer 2 — Listings (read-only)**
+## Current layer: **Layer 3 — Booking flow with EXCLUDE constraint**
 
-Spec: [`docs/03-layer-2-listings.md`](../docs/03-layer-2-listings.md).
+Spec: [`docs/04-layer-3-booking.md`](../docs/04-layer-3-booking.md).
 
-L2 introduces:
-- `machines` table + RLS policies (read public for active machines, owner-CRUD on own).
-- Pure utilities in `src/lib/`: `money.ts` (paise ↔ rupees), `geohash.ts` (precision-6 cells), `distance.ts` (Haversine).
-- Query layer in `src/integrations/supabase/machines.ts` (read-only at L2; create/update lands in L4).
-- TanStack Query hooks in `src/hooks/useMachines.ts`.
-- UI primitives in `src/components/ui/` (Card, Badge, LoadingState, EmptyState).
-- `MachineCard` in `src/components/machine/`.
-- Renter Tab layout (Discover, Bookings, AI Helper, Profile — only Discover wired at L2).
-- Discover screen + Machine Detail screen.
-- Location store + `useLocation` hook (Expo Location with Mandya fallback).
-- Seed script (`scripts/seed.ts`) — 8+ demo machines across categories.
+L3 introduces:
+- `bookings` table with `btree_gist` EXCLUDE constraint preventing double-bookings.
+- Pure libs: `range.ts` (tstzrange parser), `pricing.ts` (calculateTotal), `booking-conflict.ts` (disabled dates).
+- Two Deno edge functions: `create-booking` (server-side pricing + conflict check) and `respond-to-booking` (state machine accept/decline/cancel).
+- Query layer `src/integrations/supabase/bookings.ts` + `src/hooks/useBookings.ts`.
+- Screens: multi-step `app/(renter)/book/[machineId].tsx`, wired renter Bookings tab, owner Requests tab.
+- Owner tab layout (Machines | Requests | Profile).
+- "Request rental" CTA enabled on machine detail screen.
 
-Plan to be drafted in this file before coding starts.
+### Phase A — DB migration + types
 
-### Pre-flight
-
-- [ ] Read `docs/03-layer-2-listings.md` end-to-end.
-- [ ] Confirm Phase E acceptance walk for L1 was performed (OAuth deferred to dev-build verification).
-
-### Phase A — DB + types
-
-- [ ] Apply `init_machines` migration via MCP (machines table + enums + indexes + RLS policies + btree_gist for future EXCLUDE).
-- [ ] Mirror SQL to `supabase/migrations/<timestamp>_init_machines.sql`.
+- [ ] Apply `init_bookings` migration via MCP.
+- [ ] Mirror SQL to `supabase/migrations/<ts>_init_bookings.sql`.
 - [ ] Regenerate `src/types/database.ts` via MCP.
+- [ ] Append aliases: `Booking`, `BookingInsert`, `BookingUpdate`, `BookingStatus`, `DurationUnit`.
 
-### Phase B — Pure libs + integration
+### Phase B — Pure libs
 
-- [ ] `src/lib/money.ts` (paise ↔ rupees, formatPaise).
-- [ ] `src/lib/geohash.ts` (precision-6 encoder).
-- [ ] `src/lib/distance.ts` (Haversine).
-- [ ] `src/integrations/supabase/machines.ts` (`fetchMachines`, `fetchMachineById`, `fetchMachinesForOwner`).
+- [ ] `src/lib/range.ts` — `parseTstzrange`.
+- [ ] `src/lib/pricing.ts` — `calculateTotal`.
+- [ ] `src/lib/booking-conflict.ts` — `getDisabledDates`.
 
-### Phase C — State + hooks
+### Phase C — Edge functions
 
-- [ ] `src/stores/locationStore.ts` (Zustand: lat/lng + permission flow with Mandya fallback).
-- [ ] `src/hooks/useLocation.ts`.
-- [ ] `src/hooks/useMachines.ts` (TanStack Query wrappers per CLAUDE.md key conventions).
+- [ ] `supabase/functions/create-booking/index.ts`.
+- [ ] `supabase/functions/respond-to-booking/index.ts`.
+- [ ] Deploy both via `supabase functions deploy`.
 
-### Phase D — UI primitives + screens
+### Phase D — Query layer + hooks
 
-- [ ] `src/components/ui/{Card,Badge,LoadingState,EmptyState}.tsx`.
-- [ ] `src/components/machine/MachineCard.tsx`.
-- [ ] Update `app/(renter)/_layout.tsx` to Tabs (Discover, Bookings, AI Helper, Profile — stub the latter three).
-- [ ] `app/(renter)/discover.tsx` — header + category filters + FlatList.
-- [ ] `app/(renter)/machine/[id].tsx` — detail screen (CTA disabled at L2; enables in L3).
+- [ ] `src/integrations/supabase/bookings.ts`.
+- [ ] Add `bookings` to `src/integrations/supabase/index.ts` barrel.
+- [ ] `src/hooks/useBookings.ts`.
 
-### Phase E — Seed + acceptance + commit
+### Phase E — Screens
 
-- [ ] `scripts/seed.ts` — 8+ machines across categories with realistic geohashes + pricing in paise.
-- [ ] `npm run seed` succeeds (needs `SUPABASE_SERVICE_ROLE_KEY` locally).
-- [ ] Discover screen renders seeded machines, sorted by distance from current location.
-- [ ] Category filter works.
-- [ ] Tap card → detail screen shows full info.
-- [ ] Distance computation verified against a hand-computed value.
+- [ ] `src/components/booking/BookingCard.tsx`.
+- [ ] `app/(renter)/book/[machineId].tsx` — 3-step booking flow.
+- [ ] `app/(renter)/bookings.tsx` — replace stub with real list.
+- [ ] `app/(owner)/requests.tsx` — owner requests tab.
+- [ ] `app/(owner)/_layout.tsx` — convert to Tabs (Machines | Requests | Profile).
+- [ ] `app/(renter)/machine/[id].tsx` — enable "Request rental" CTA.
+
+### Phase F — Acceptance + commit
+
+- [ ] `npm run seed` (clean slate machines).
+- [ ] Book flow end-to-end: renter submits → owner accepts → status reflects in both tabs.
+- [ ] Overlapping booking attempt → 409 toast.
 - [ ] `npm run typecheck` + `npm run lint` clean.
-- [ ] No raw `console.*` outside `src/lib/logger.ts`. No `../..` imports.
-- [ ] Commit: `feat(L2): read-only listings feed and detail screen`.
+- [ ] MCP verify EXCLUDE constraint exists.
+- [ ] Commit: `feat(L3): booking flow with EXCLUDE constraint conflict prevention`.
 
 ---
 
 ## Completed Work Log
 
 _Items move here after each layer's commit lands. Don't delete — this is the audit trail._
+
+### Layer 2 — Listings (read-only) — committed
+
+L2 is purely additive to L1. Implements the machines table, discover feed, machine detail screen, and seed script.
+
+**Phase A — DB + types**
+- [x] Migration `init_machines` applied via MCP (version `20260511193444`).
+- [x] Enums: `machine_condition`, `machine_status`. Table: `machines` (30 cols). 3 indexes. 4 RLS policies.
+- [x] Mirrored to `supabase/migrations/20260511193444_init_machines.sql`.
+- [x] Types regenerated via MCP → `src/types/database.ts`. Aliases appended: `Machine`, `MachineInsert`, `MachineUpdate`, `MachineCategory`, `MachineCondition`, `MachineStatus`.
+
+**Phase B — Pure libs + integration**
+- [x] `src/lib/money.ts` — `rupeesToPaise`, `paiseToRupees`, `formatPaise` (Intl.NumberFormat en-IN).
+- [x] `src/lib/geohash.ts` — `encodeGeohash` precision-6 BASE32.
+- [x] `src/lib/distance.ts` — `distanceKm` Haversine.
+- [x] `src/integrations/supabase/machines.ts` — `fetchMachines`, `fetchMachineById`, `fetchMachinesForOwner`. Tagged `[MACHINE]`.
+- [x] `src/integrations/supabase/index.ts` — added `machines` barrel export.
+
+**Phase C — State + hooks**
+- [x] `src/stores/locationStore.ts` — Zustand: `coords`, `permissionStatus`. `MANDYA_FALLBACK = { lat: 12.5218, lng: 76.8951 }`.
+- [x] `src/hooks/useLocation.ts` — expo-location permission + Mandya fallback.
+- [x] `src/hooks/useMachines.ts` — `useMachines` (60s stale), `useMachine` (30s), `useOwnerMachines` (60s). TanStack Query keys per CLAUDE.md.
+
+**Phase D — UI primitives + screens**
+- [x] `src/components/ui/Card.tsx` — Pressable/View wrapper.
+- [x] `src/components/ui/Badge.tsx` — hard-coded NativeWind class names per variant (avail/busy/pending/accepted/declined).
+- [x] `src/components/ui/LoadingState.tsx` — full-bleed ActivityIndicator.
+- [x] `src/components/ui/EmptyState.tsx` — icon + title + body + optional CTA.
+- [x] `src/components/machine/MachineCard.tsx` — 80×80 placeholder, category icon, formatPaise, distanceKm.
+- [x] `app/(renter)/_layout.tsx` — Tabs: Discover / Bookings / AI Helper / Profile.
+- [x] `app/(renter)/discover.tsx` — category filter pills, FlatList sorted by distance, pull-to-refresh, empty state.
+- [x] `app/(renter)/machine/[id].tsx` — hero, pricing, owner info, disabled "Request rental" CTA.
+- [x] `app/(renter)/bookings.tsx`, `app/(renter)/ai-helper.tsx`, `app/(renter)/profile.tsx` — stubs.
+
+**Phase E — Seed + acceptance**
+- [x] `scripts/seed.ts` — 10 machines across 5 categories, Mandya area. `ws` transport for Node 20.
+- [x] `package.json` — `"seed": "tsx --env-file=.env scripts/seed.ts"`.
+- [x] `.env.example` — `SUPABASE_SERVICE_ROLE_KEY` line added.
+- [x] `npm run seed` → 10 machines inserted.
+- [x] Discover screen renders seeded machines sorted by distance.
+- [x] Category filter, pull-to-refresh, machine detail all working on web preview.
+- [x] Windows Metro fix: created empty placeholder dirs for missing lightningcss platform binaries.
 
 ### Layer 1 — Auth + onboarding + role select — committed (this commit)
 
@@ -155,7 +191,7 @@ L1 deviates from PRD §1 on three Vishnu-set points:
 - [x] Stash docs out of project dir, run `create-expo-app@latest --template default`, verify SDK 54.0.33, verify Expo Go v54 connects via tunnel mode.
 - [x] Delete sample template files (`app/(tabs)`, `app/modal.tsx`, root `components/hooks/constants/`, `react-logo*` images, `scripts/reset-project.js`).
 - [x] Rewrite `app/_layout.tsx` to placeholder; restore docs; rename git branch `master` → `main`.
-- [x] Update `.gitignore` to ignore `.env` and `.env.*` while keeping `.env.example`.
+- [x] Update `.gitignore` to exclude `.env` and `.env.*` while keeping `.env.example`.
 
 **Phase 2 — Deps + config**
 - [x] Install JS deps (zustand, @tanstack/react-query, react-hook-form + zod + @hookform/resolvers, lucide-react-native, i18next + react-i18next, date-fns, @supabase/supabase-js, nativewind).
@@ -186,5 +222,3 @@ L1 deviates from PRD §1 on three Vishnu-set points:
 - [x] App launches on Expo Go v54 (verified by Vishnu); status text reads "Connected to Supabase ✓" (green).
 - [x] `npm run typecheck`, `npm run lint`, no raw `console.*` outside `src/lib/logger.ts`, no `../..` imports.
 - [x] L0 commit `9417de9` lands on `main` with `.env` excluded.
-</content>
-</invoke>

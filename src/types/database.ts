@@ -6,7 +6,12 @@
  * every applied migration so the client types track the DB. Per CLAUDE.md,
  * `@/types/database` is the single source of truth for DB row shapes.
  *
- * Do not hand-edit. To refresh:
+ * Do not hand-edit the generated `Database` block above the convenience
+ * aliases section — re-run the generator instead. Hand-curated aliases at
+ * the bottom of this file (clearly fenced) survive regeneration as long as
+ * you keep them after the `Constants` export.
+ *
+ * To refresh:
  *   - In a Claude Code session: call `mcp__supabase__generate_typescript_types`
  *     and replace the contents of this file with the result.
  *   - Without MCP: `npx supabase gen types typescript --project-id <ref>`
@@ -56,6 +61,138 @@ export type Database = {
           name_kn?: string
         }
         Relationships: []
+      }
+      machines: {
+        Row: {
+          brand: string
+          category: string
+          condition: Database["public"]["Enums"]["machine_condition"]
+          condition_report_generated_at: string | null
+          condition_report_image_url: string | null
+          condition_report_issues: string[] | null
+          condition_report_summary: string | null
+          created_at: string
+          daily_rate_paise: number
+          description_en: string
+          description_kn: string
+          district: string
+          features: string[]
+          geohash: string
+          horsepower: number | null
+          hourly_rate_paise: number
+          id: string
+          image_urls: string[]
+          is_currently_available: boolean
+          last_service_date: string | null
+          location_lat: number
+          location_lng: number
+          minimum_hours: number
+          model: string
+          owner_id: string
+          owner_name: string
+          owner_phone: string | null
+          owner_village: string
+          primary_image_url: string | null
+          status: Database["public"]["Enums"]["machine_status"]
+          title: string
+          total_bookings: number
+          total_earnings_paise: number
+          updated_at: string
+          village: string
+          year_of_purchase: number
+        }
+        Insert: {
+          brand: string
+          category: string
+          condition?: Database["public"]["Enums"]["machine_condition"]
+          condition_report_generated_at?: string | null
+          condition_report_image_url?: string | null
+          condition_report_issues?: string[] | null
+          condition_report_summary?: string | null
+          created_at?: string
+          daily_rate_paise: number
+          description_en?: string
+          description_kn?: string
+          district: string
+          features?: string[]
+          geohash: string
+          horsepower?: number | null
+          hourly_rate_paise: number
+          id?: string
+          image_urls?: string[]
+          is_currently_available?: boolean
+          last_service_date?: string | null
+          location_lat: number
+          location_lng: number
+          minimum_hours?: number
+          model: string
+          owner_id: string
+          owner_name: string
+          owner_phone?: string | null
+          owner_village: string
+          primary_image_url?: string | null
+          status?: Database["public"]["Enums"]["machine_status"]
+          title: string
+          total_bookings?: number
+          total_earnings_paise?: number
+          updated_at?: string
+          village: string
+          year_of_purchase: number
+        }
+        Update: {
+          brand?: string
+          category?: string
+          condition?: Database["public"]["Enums"]["machine_condition"]
+          condition_report_generated_at?: string | null
+          condition_report_image_url?: string | null
+          condition_report_issues?: string[] | null
+          condition_report_summary?: string | null
+          created_at?: string
+          daily_rate_paise?: number
+          description_en?: string
+          description_kn?: string
+          district?: string
+          features?: string[]
+          geohash?: string
+          horsepower?: number | null
+          hourly_rate_paise?: number
+          id?: string
+          image_urls?: string[]
+          is_currently_available?: boolean
+          last_service_date?: string | null
+          location_lat?: number
+          location_lng?: number
+          minimum_hours?: number
+          model?: string
+          owner_id?: string
+          owner_name?: string
+          owner_phone?: string | null
+          owner_village?: string
+          primary_image_url?: string | null
+          status?: Database["public"]["Enums"]["machine_status"]
+          title?: string
+          total_bookings?: number
+          total_earnings_paise?: number
+          updated_at?: string
+          village?: string
+          year_of_purchase?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "machines_category_fkey"
+            columns: ["category"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "machines_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -120,6 +257,8 @@ export type Database = {
     }
     Enums: {
       language_code: "en" | "kn"
+      machine_condition: "excellent" | "good" | "fair" | "needs_service"
+      machine_status: "active" | "paused" | "archived"
       user_role: "owner" | "renter" | "both"
     }
     CompositeTypes: {
@@ -249,6 +388,8 @@ export const Constants = {
   public: {
     Enums: {
       language_code: ["en", "kn"],
+      machine_condition: ["excellent", "good", "fair", "needs_service"],
+      machine_status: ["active", "paused", "archived"],
       user_role: ["owner", "renter", "both"],
     },
   },
@@ -257,6 +398,7 @@ export const Constants = {
 // ─── Convenience aliases used across the app ──────────────────────────
 // Keep short, hand-curated aliases here so feature code reads naturally
 // without restating `Database['public']['Tables']['profiles']['Row']`.
+// SAFE TO KEEP across regenerations as long as they live after `Constants`.
 
 export type Profile = Database['public']['Tables']['profiles']['Row']
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
@@ -264,5 +406,23 @@ export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 export type Category = Database['public']['Tables']['categories']['Row']
 
+export type Machine = Database['public']['Tables']['machines']['Row']
+export type MachineInsert = Database['public']['Tables']['machines']['Insert']
+export type MachineUpdate = Database['public']['Tables']['machines']['Update']
+
 export type UserRole = Database['public']['Enums']['user_role']
 export type LanguageCode = Database['public']['Enums']['language_code']
+export type MachineCondition = Database['public']['Enums']['machine_condition']
+export type MachineStatus = Database['public']['Enums']['machine_status']
+
+// Why hand-typed (not from DB): the Postgres `category` column is `text` with
+// an FK to categories(id), so the generated type is `string`. The seeded
+// catalog is fixed (5 categories) — narrowing to a literal union catches
+// typos and powers exhaustive switch statements in the UI (icons, filters).
+// Keep this in sync with the inserts in 20260509090235_init_profiles.sql.
+export type MachineCategory =
+  | 'tractor'
+  | 'harvester'
+  | 'sprayer'
+  | 'tiller'
+  | 'other'

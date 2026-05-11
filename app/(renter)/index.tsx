@@ -1,65 +1,15 @@
 /**
- * @file (renter)/index.tsx — placeholder renter home.
+ * @file (renter)/index.tsx — bare redirect to the Discover tab.
  * @module app
  *
- * L1 just proves auth + routing. The real renter discover feed lands
- * in L2. For now: greet by name, show district, and offer sign-out so
- * we can re-test the auth flow during dev.
+ * After L1, the renter group's index was a placeholder home. L2 replaces
+ * the layout with Tabs and Discover is the default tab — but expo-router
+ * still routes `/(renter)` to this `index.tsx`. Redirect to keep any
+ * existing links / nav-helpers working without each one knowing about the
+ * tab restructure.
  */
-import { router } from 'expo-router';
-import { useEffect } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Redirect } from 'expo-router';
 
-import { auth } from '@/integrations/supabase';
-import { createLogger } from '@/lib/logger';
-import { useAuthStore } from '@/stores/authStore';
-
-const log = createLogger('UI');
-const authLog = createLogger('AUTH');
-
-export default function RenterHome() {
-  const profile = useAuthStore((s) => s.profile);
-
-  useEffect(() => {
-    log.info('Renter home: page visited');
-  }, []);
-
-  const handleSignOut = async () => {
-    authLog.info('Renter: sign-out tapped');
-    try {
-      await auth.signOut();
-      authLog.info('Renter home: sign-out completed');
-      // Why: explicit destination. router.replace('/') is a no-op when URL
-      // doesn't change (groups are invisible in URL on web), so we name
-      // the target group directly.
-      router.replace('/(onboarding)');
-    } catch (err) {
-      authLog.error('signOut UI', err);
-      Alert.alert('Sign out failed', 'Please try again.');
-    }
-  };
-
-  return (
-    <SafeAreaView className="flex-1 bg-bg">
-      {/* Why: same responsive pattern as (auth)/index.tsx — see that file's note. */}
-      <View className="flex-1 px-6 py-6 justify-center sm:px-8 sm:py-10 md:max-w-2xl md:mx-auto md:w-full md:px-12 lg:max-w-3xl lg:py-16">
-        <Text className="text-ink text-2xl font-semibold mb-2">
-          Welcome, {profile?.display_name}
-        </Text>
-        <Text className="text-ink-soft text-base mb-2">
-          Renter mode — Layer 1
-        </Text>
-        <Text className="text-ink-mute text-sm mb-8">
-          {profile?.village}, {profile?.district}
-        </Text>
-        <Pressable
-          onPress={handleSignOut}
-          className="bg-primary rounded-xl py-4 items-center min-h-[44px] justify-center"
-        >
-          <Text className="text-white text-base font-semibold">Sign out</Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
-  );
+export default function RenterIndex() {
+  return <Redirect href="/(renter)/discover" />;
 }
