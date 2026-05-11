@@ -1,63 +1,90 @@
 /**
- * @file (owner)/index.tsx — placeholder owner home.
+ * @file (owner)/index.tsx — owner's machine listings screen.
  * @module app
  *
- * L1 just proves auth + routing. The real owner Add Machine + Requests
- * tabs land in L3/L4. For now: greet by name, show district, and offer
- * sign-out so we can re-test the auth flow during dev.
+ * Shows all machines the signed-in owner has created (any status). Tapping
+ * a card navigates to the edit screen. FAB in the bottom-right opens the
+ * Add Machine flow. Empty state is shown when the owner has no listings yet.
  */
 import { router } from 'expo-router';
+import { Plus, Tractor } from 'lucide-react-native';
 import { useEffect } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { auth } from '@/integrations/supabase';
+import { MachineCard } from '@/components/machine/MachineCard';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { LoadingState } from '@/components/ui/LoadingState';
+import { useOwnerMachines } from '@/hooks/useMachines';
 import { createLogger } from '@/lib/logger';
+import { colors } from '@/theme/colors';
 import { useAuthStore } from '@/stores/authStore';
+import type { Machine } from '@/types/database';
 
 const log = createLogger('UI');
-const authLog = createLogger('AUTH');
 
-export default function OwnerHome() {
+export default function OwnerListings() {
   const profile = useAuthStore((s) => s.profile);
+  const { data: machines, isLoading, refetch } = useOwnerMachines(profile?.id);
 
   useEffect(() => {
-    log.info('Owner home: page visited');
+    log.info('Owner listings: page visited');
   }, []);
 
-  const handleSignOut = async () => {
-    authLog.info('Owner: sign-out tapped');
-    try {
-      await auth.signOut();
-      authLog.info('Owner home: sign-out completed');
-      // Why: explicit destination. See note in (renter)/index.tsx.
-      router.replace('/(onboarding)');
-    } catch (err) {
-      authLog.error('signOut UI', err);
-      Alert.alert('Sign out failed', 'Please try again.');
-    }
+  const handleAddMachine = () => {
+    log.info('Owner listings: add machine tapped');
+    router.push('/(owner)/add-machine' as Parameters<typeof router.push>[0]);
   };
 
+  const handleCardPress = (machine: Machine) => {
+    log.info('Owner listings: machine card tapped', { machineId: machine.id });
+    router.push(
+      `/(owner)/machine/${machine.id}/edit` as Parameters<typeof router.push>[0],
+    );
+  };
+
+  if (isLoading) {
+    return <LoadingState subtitle="Loading your machines…" />;
+  }
+
   return (
-    <SafeAreaView className="flex-1 bg-bg">
-      {/* Why: same responsive pattern as (auth)/index.tsx — see that file's note. */}
-      <View className="flex-1 px-6 py-6 justify-center sm:px-8 sm:py-10 md:max-w-2xl md:mx-auto md:w-full md:px-12 lg:max-w-3xl lg:py-16">
-        <Text className="text-ink text-2xl font-semibold mb-2">
-          Welcome, {profile?.display_name}
-        </Text>
-        <Text className="text-ink-soft text-base mb-2">
-          Owner mode — Layer 1
-        </Text>
-        <Text className="text-ink-mute text-sm mb-8">
-          {profile?.village}, {profile?.district}
-        </Text>
+    <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 pt-4 pb-3">
+        <Text className="text-ink text-xl font-bold">My Machines</Text>
         <Pressable
-          onPress={handleSignOut}
-          className="bg-primary rounded-xl py-4 items-center min-h-[44px] justify-center"
+          onPress={handleAddMachine}
+          className="flex-row items-center gap-1.5 bg-primary px-4 py-2 rounded-xl min-h-[44px] justify-center"
         >
-          <Text className="text-white text-base font-semibold">Sign out</Text>
+          <Plus size={16} color={colors.surface} />
+          <Text className="text-white font-semibold text-sm">Add</Text>
         </Pressable>
       </View>
+
+      <FlatList
+        data={machines ?? []}
+        keyExtractor={(m) => m.id}
+        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        ItemSeparatorComponent={() => <View className="h-3" />}
+        onRefresh={refetch}
+        refreshing={isLoading}
+        renderItem={({ item }) => (
+          <MachineCard
+            machine={item}
+            distanceKm={null}
+            onPress={() => handleCardPress(item)}
+          />
+        )}
+        ListEmptyComponent={
+          <EmptyState
+            icon={Tractor}
+            title="No machines yet"
+            body="Add your first machine to start receiving rental requests."
+            ctaLabel="Add machine"
+            onCtaPress={handleAddMachine}
+          />
+        }
+      />
     </SafeAreaView>
   );
 }

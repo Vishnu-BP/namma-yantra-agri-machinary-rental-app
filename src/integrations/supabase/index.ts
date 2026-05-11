@@ -10,3 +10,4 @@ export { supabase } from './client';
 export * as auth from './auth';
 export * as machines from './machines';
 export * as bookings from './bookings';
+export * as storage from './storage';

@@ -45,6 +45,9 @@ export default function OwnerLayout() {
           tabBarIcon: ({ color }) => <User size={TAB_ICON_SIZE} color={color} />,
         }}
       />
+      {/* Hide nested route groups from the tab bar */}
+      <Tabs.Screen name="add-machine" options={{ href: null }} />
+      <Tabs.Screen name="machine" options={{ href: null }} />
     </Tabs>
   );
 }

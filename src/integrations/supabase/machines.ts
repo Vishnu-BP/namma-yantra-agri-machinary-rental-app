@@ -1,18 +1,21 @@
 /**
- * @file machines.ts — read-only query layer for the `machines` table.
+ * @file machines.ts — query + CRUD layer for the `machines` table.
  * @module src/integrations/supabase
  *
- * L2 surface only — fetch helpers for the discover feed, single detail,
- * and owner listings views. Owner CRUD (create/update/delete) ships in L4
- * and will be added here. Booking-aware queries (e.g., availability for a
- * date range) come in L3 and live in `bookings.ts`.
+ * L2: read helpers (discover feed, single detail, owner listings).
+ * L4: write helpers (create, update, update images, delete).
  *
  * Per CLAUDE.md folder rules: this is the only place outside the auth
  * helper that imports `@supabase/supabase-js` indirectly via `client.ts`.
  * Hooks/components consume via `import { machines } from '@/integrations/supabase'`.
  */
 import { createLogger } from '@/lib/logger';
-import type { Machine, MachineCategory } from '@/types/database';
+import { encodeGeohash } from '@/lib/geohash';
+import type {
+  Machine,
+  MachineCategory,
+  MachineCondition,
+} from '@/types/database';
 
 import { supabase } from './client';
 
@@ -102,4 +105,134 @@ export async function fetchMachinesForOwner(
     throw error;
   }
   return data ?? [];
+}
+
+// ─── L4 — Owner CRUD ──────────────────────────────────────────────────────────
+
+export interface CreateMachineInput {
+  ownerId: string;
+  ownerName: string;
+  ownerPhone: string | null;
+  ownerVillage: string;
+  category: MachineCategory;
+  brand: string;
+  model: string;
+  yearOfPurchase: number;
+  horsepower?: number;
+  title: string;
+  descriptionEn: string;
+  descriptionKn: string;
+  features: string[];
+  hourlyRatePaise: number;
+  dailyRatePaise: number;
+  minimumHours: number;
+  locationLat: number;
+  locationLng: number;
+  village: string;
+  district: string;
+  condition: MachineCondition;
+  lastServiceDate?: string;
+}
+
+/**
+ * Insert a new machine row and return its generated UUID.
+ * Geohash is computed from lat/lng so the discover feed's proximity sort works.
+ * Images are uploaded separately and patched in via `updateMachineImages`.
+ */
+export async function createMachine(input: CreateMachineInput): Promise<string> {
+  const geohash = encodeGeohash(input.locationLat, input.locationLng);
+  log.info('createMachine: inserting', { category: input.category, ownerId: input.ownerId });
+  const { data, error } = await supabase
+    .from('machines')
+    .insert({
+      owner_id: input.ownerId,
+      owner_name: input.ownerName,
+      owner_phone: input.ownerPhone,
+      owner_village: input.ownerVillage,
+      category: input.category,
+      brand: input.brand,
+      model: input.model,
+      year_of_purchase: input.yearOfPurchase,
+      horsepower: input.horsepower ?? null,
+      title: input.title,
+      description_en: input.descriptionEn,
+      description_kn: input.descriptionKn,
+      features: input.features,
+      hourly_rate_paise: input.hourlyRatePaise,
+      daily_rate_paise: input.dailyRatePaise,
+      minimum_hours: input.minimumHours,
+      location_lat: input.locationLat,
+      location_lng: input.locationLng,
+      village: input.village,
+      district: input.district,
+      geohash,
+      condition: input.condition,
+      last_service_date: input.lastServiceDate ?? null,
+      status: 'active',
+      is_currently_available: true,
+    })
+    .select('id')
+    .single();
+  if (error) {
+    log.error('createMachine: insert failed', error);
+    throw error;
+  }
+  log.info('createMachine: done', { id: data.id });
+  return data.id;
+}
+
+/**
+ * Patch any subset of machine fields. If location_lat/lng are both present
+ * in the patch, the geohash is recomputed so proximity queries stay correct.
+ */
+export async function updateMachine(
+  id: string,
+  patch: Partial<Machine>,
+): Promise<void> {
+  const update: Partial<Machine> & { geohash?: string } = { ...patch };
+  if (patch.location_lat !== undefined && patch.location_lng !== undefined) {
+    update.geohash = encodeGeohash(patch.location_lat, patch.location_lng);
+  }
+  log.info('updateMachine: patching', { id });
+  const { error } = await supabase.from('machines').update(update).eq('id', id);
+  if (error) {
+    log.error('updateMachine: update failed', error);
+    throw error;
+  }
+  log.info('updateMachine: done', { id });
+}
+
+/**
+ * Set the image_urls array and primary_image_url after photos have been
+ * uploaded to Storage. Called as the final step in the Add Machine flow.
+ */
+export async function updateMachineImages(
+  id: string,
+  imageUrls: string[],
+  primaryImageUrl: string,
+): Promise<void> {
+  log.info('updateMachineImages: patching', { id, count: imageUrls.length });
+  const { error } = await supabase
+    .from('machines')
+    .update({ image_urls: imageUrls, primary_image_url: primaryImageUrl })
+    .eq('id', id);
+  if (error) {
+    log.error('updateMachineImages: update failed', error);
+    throw error;
+  }
+  log.info('updateMachineImages: done', { id });
+}
+
+/**
+ * Delete a machine row. RLS ensures only the owner can delete their own machine.
+ * Call `deleteMachineImages` from Storage BEFORE this to avoid orphaned files.
+ */
+export async function deleteMachine(id: string): Promise<void> {
+  log.info('deleteMachine: deleting', { id });
+  const { error } = await supabase.from('machines').delete().eq('id', id);
+  if (error) {
+    log.error('deleteMachine: delete failed', error);
+    throw error;
+  }
+  log.info('deleteMachine: done', { id });
 }
