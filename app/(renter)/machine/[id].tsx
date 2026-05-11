@@ -22,7 +22,7 @@ import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Badge } from '@/components/ui/Badge';
+import { AvailabilityBadge } from '@/components/machine/AvailabilityBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LoadingState } from '@/components/ui/LoadingState';
 import { useMachine } from '@/hooks/useMachines';
@@ -111,9 +111,10 @@ export default function MachineDetail() {
                 {machine.horsepower != null ? ` · ${machine.horsepower} HP` : ''}
               </Text>
             </View>
-            <Badge
-              variant={machine.is_currently_available ? 'avail' : 'busy'}
-              label={machine.is_currently_available ? 'Available' : 'In use'}
+            <AvailabilityBadge
+              machineId={machine.id}
+              initialValue={machine.is_currently_available}
+              size="md"
             />
           </View>
 

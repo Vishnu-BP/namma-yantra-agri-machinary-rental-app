@@ -14,11 +14,11 @@
  *   5. Navigate to owner listings
  */
 import { router } from 'expo-router';
-import MapView, { Marker } from 'react-native-maps';
 import { ArrowLeft } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { MapLocationPicker } from '@/components/machine/MapLocationPicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod/v4';
@@ -315,31 +315,17 @@ export default function AddMachinePricing() {
           <Text className="text-error text-xs mb-3">{errors.district.message}</Text>
         )}
 
-        {/* Map pin */}
-        <Text className="text-ink font-semibold text-sm mb-2">Confirm farm location</Text>
-        <Text className="text-ink-mute text-xs mb-3">
-          Drag the pin to the exact location of your farm.
-        </Text>
-        <MapView
-          style={{ height: 220, borderRadius: 16, marginBottom: 16 }}
-          initialRegion={{
-            latitude: mapLat,
-            longitude: mapLng,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
+        {/* Map pin — uses platform-specific MapLocationPicker to avoid web bundling react-native-maps */}
+        <Text className="text-ink font-semibold text-sm mb-2">Farm location</Text>
+        <MapLocationPicker
+          lat={mapLat}
+          lng={mapLng}
+          onLocationChange={(lat, lng) => {
+            log.info('Add machine pricing: location changed', { lat, lng });
+            setMapLat(lat);
+            setMapLng(lng);
           }}
-        >
-          <Marker
-            coordinate={{ latitude: mapLat, longitude: mapLng }}
-            draggable
-            onDragEnd={(e) => {
-              const { latitude, longitude } = e.nativeEvent.coordinate;
-              log.info('Add machine pricing: map pin dragged', { lat: latitude, lng: longitude });
-              setMapLat(latitude);
-              setMapLng(longitude);
-            }}
-          />
-        </MapView>
+        />
       </ScrollView>
 
       <View className="px-4 pb-6">

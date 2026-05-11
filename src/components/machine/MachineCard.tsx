@@ -22,7 +22,7 @@ import {
 } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 
-import { Badge } from '@/components/ui/Badge';
+import { AvailabilityBadge } from '@/components/machine/AvailabilityBadge';
 import { formatPaise } from '@/lib/money';
 import { colors } from '@/theme/colors';
 import type { Machine, MachineCategory } from '@/types/database';
@@ -104,9 +104,9 @@ export function MachineCard({ machine, distanceKm, onPress }: MachineCardProps) 
           <Text className="text-ink text-sm font-semibold">
             {formatPaise(machine.hourly_rate_paise)}/hr
           </Text>
-          <Badge
-            variant={machine.is_currently_available ? 'avail' : 'busy'}
-            label={machine.is_currently_available ? 'Available' : 'In use'}
+          <AvailabilityBadge
+            machineId={machine.id}
+            initialValue={machine.is_currently_available}
           />
         </View>
       </View>

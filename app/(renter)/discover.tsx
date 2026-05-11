@@ -10,6 +10,7 @@
  * the seed-scale demo (≤50 machines) sorting client-side is fine.
  */
 import { router } from 'expo-router';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   CircleHelp,
   Droplets,
@@ -34,6 +35,7 @@ import { LoadingState } from '@/components/ui/LoadingState';
 import { MachineCard } from '@/components/machine/MachineCard';
 import { useLocation } from '@/hooks/useLocation';
 import { useMachines } from '@/hooks/useMachines';
+import { supabase } from '@/integrations/supabase';
 import { distanceKm } from '@/lib/distance';
 import { createLogger } from '@/lib/logger';
 import { useAuthStore } from '@/stores/authStore';
@@ -64,6 +66,7 @@ export default function Discover() {
   const profile = useAuthStore((s) => s.profile);
   const { coords } = useLocation();
   const [filter, setFilter] = useState<FilterValue>('all');
+  const queryClient = useQueryClient();
 
   const machinesQuery = useMachines({
     category: filter === 'all' ? undefined : filter,
@@ -72,6 +75,31 @@ export default function Discover() {
   useEffect(() => {
     log.info('Discover: page visited');
   }, []);
+
+  // Feed-level realtime: one channel for the whole machines table patches
+  // the TanStack cache so all visible cards update without re-fetching.
+  useEffect(() => {
+    const channel = supabase
+      .channel('machines-feed')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'machines' },
+        (payload) => {
+          const updated = payload.new as { id: string };
+          log.info('Discover: realtime machine update', { id: updated.id });
+          queryClient.setQueriesData<Machine[]>({ queryKey: ['machines'] }, (old) => {
+            if (!Array.isArray(old)) return old;
+            return old.map((m) => (m.id === updated.id ? { ...m, ...payload.new } : m));
+          });
+          queryClient.setQueryData<Machine>(['machine', updated.id], (old) =>
+            old ? { ...old, ...payload.new } : old,
+          );
+        },
+      )
+      .subscribe();
+
+    return () => { void supabase.removeChannel(channel); };
+  }, [queryClient]);
 
   // Why memoized: distance sort is O(n log n) — keep it stable across
   // unrelated re-renders (e.g., refresh-control state flicks).
