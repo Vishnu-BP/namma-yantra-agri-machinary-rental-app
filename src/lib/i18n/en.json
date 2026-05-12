@@ -181,7 +181,10 @@
     "viewMode": "View as",
     "viewAsRenter": "Renter",
     "viewAsOwner": "Owner",
-    "myMachines": "My Machines"
+    "myMachines": "My Machines",
+    "aboutTitle": "About Namma-Yantra",
+    "aboutBody": "Peer-to-peer farm machinery rental for Karnataka. Find tractors, harvesters and more from owners near you — or earn from machinery you own.",
+    "version": "Version {{v}}"
   },
   "ai": {
     "chatTitle": "Namma-Yantra Assistant",

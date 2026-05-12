@@ -196,6 +196,19 @@ export default function Profile() {
             variant="ghost"
             icon={LogOut}
           />
+
+          {/* ── About card — fills the empty space, gives context to first-time users ── */}
+          <View className="bg-primary/5 border border-primary/20 rounded-2xl p-4 mt-6 mb-2">
+            <Text className="text-primary text-sm font-bold mb-1">
+              {t('profile.aboutTitle')}
+            </Text>
+            <Text className="text-ink-soft text-xs leading-5">
+              {t('profile.aboutBody')}
+            </Text>
+            <Text className="text-ink-mute text-[10px] mt-2 text-right">
+              {t('profile.version', { v: '0.1.0' })}
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
