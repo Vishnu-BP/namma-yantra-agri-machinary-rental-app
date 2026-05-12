@@ -43,7 +43,7 @@ export default function Profile() {
     } catch (err) {
       log.error('viewMode persist failed', err);
     }
-    router.replace('/(owner)');
+    router.replace('/(owner)/requests');
   };
 
   const handleSignOut = async () => {

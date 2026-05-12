@@ -180,7 +180,8 @@
     "role": "Role",
     "viewMode": "View as",
     "viewAsRenter": "Renter",
-    "viewAsOwner": "Owner"
+    "viewAsOwner": "Owner",
+    "myMachines": "My Machines"
   },
   "ai": {
     "chatTitle": "Namma-Yantra Assistant",

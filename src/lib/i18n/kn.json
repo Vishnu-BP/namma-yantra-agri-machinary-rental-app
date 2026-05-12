@@ -180,7 +180,8 @@
     "role": "ಪಾತ್ರ",
     "viewMode": "ಇಲ್ಲಿಂದ ವೀಕ್ಷಿಸಿ",
     "viewAsRenter": "ಬಾಡಿಗೆದಾರ",
-    "viewAsOwner": "ಮಾಲೀಕ"
+    "viewAsOwner": "ಮಾಲೀಕ",
+    "myMachines": "ನನ್ನ ಯಂತ್ರಗಳು"
   },
   "ai": {
     "chatTitle": "ನಮ್ಮ-ಯಂತ್ರ ಸಹಾಯಕ",

@@ -170,7 +170,7 @@ export default function EditMachine() {
             try {
               await deleteMutation.mutateAsync({ id, ownerId: profile.id });
               log.info('Edit machine: delete completed', { id });
-              router.replace('/(owner)');
+              router.replace('/(owner)/listings' as Parameters<typeof router.replace>[0]);
             } catch (err) {
               log.error('Edit machine: delete failed', err);
               Alert.alert('Delete failed', err instanceof Error ? err.message : 'Please try again.');

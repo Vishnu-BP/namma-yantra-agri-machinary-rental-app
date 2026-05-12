@@ -10,7 +10,7 @@
  * Cleanup removes the channel on unmount so there are no listener leaks when
  * navigating between the discover feed and detail screens.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { supabase } from '@/integrations/supabase';
 import { createLogger } from '@/lib/logger';
@@ -39,6 +39,17 @@ export function useAvailability(
   // Only show loading if we don't already have a value from the caller.
   const [isLoading, setIsLoading] = useState(initialValue === undefined);
 
+  // Why: each subscriber needs its OWN supabase channel. If two AvailabilityBadges
+  // (e.g. one in MachineCard on discover, one in machine detail) both call
+  // `supabase.channel("machine-availability:<id>")`, supabase-js returns the
+  // SAME already-subscribed channel object — and trying to .on() a second
+  // callback on it throws "cannot add postgres_changes callbacks ... after
+  // subscribe()". Suffixing with a per-instance random token forces a unique
+  // channel per hook instance.
+  const instanceTokenRef = useRef<string>(
+    Math.random().toString(36).slice(2, 10),
+  );
+
   useEffect(() => {
     if (!machineId) return;
 
@@ -57,7 +68,7 @@ export function useAvailability(
         });
     }
 
-    const channelName = `machine-availability:${machineId}`;
+    const channelName = `machine-availability:${machineId}:${instanceTokenRef.current}`;
     log.info('useAvailability: subscribing', { machineId });
 
     const channel = supabase

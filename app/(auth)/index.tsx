@@ -10,7 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Tractor } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Alert, Pressable, Text, TextInput, View } from 'react-native';
+import { Alert, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
@@ -71,19 +71,8 @@ export default function Auth() {
     finally { setBusy(false); }
   };
 
-  const handleOAuth = async (provider: 'google' | 'github', fn: () => Promise<boolean>) => {
-    log.info('Auth: OAuth tapped', { provider });
-    setBusy(true);
-    try {
-      const ok = await fn();
-      log.info('Auth: OAuth completed', { provider, completed: ok });
-      // Why: only sync if the user actually completed the flow (ok=true).
-      // Same rationale as OTP — pre-fetch profile so the guard routes
-      // immediately when busy=false, no visible /(auth) flash.
-      if (ok) await syncSessionAndProfile();
-    } catch (err) { log.error(`${provider} UI`, err); showError('Sign in failed', err); }
-    finally { setBusy(false); }
-  };
+  // OAuth removed from V1 — Google/GitHub had post-auth deep-link issues
+  // on Android that required app restart. Email OTP is the only sign-in.
 
   return (
     <SafeAreaView className="flex-1 bg-bg">
@@ -102,30 +91,6 @@ export default function Auth() {
 
         {step === 'enter-email' && (
           <View>
-            {/* OAuth buttons */}
-            <Pressable
-              onPress={() => handleOAuth('google', auth.signInWithGoogle)}
-              disabled={busy}
-              className="bg-surface border-2 border-border rounded-2xl items-center justify-center py-4 mb-3 min-h-[48px] shadow-card active:opacity-75"
-            >
-              <Text className="text-ink text-base font-medium">Continue with Google</Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => handleOAuth('github', auth.signInWithGitHub)}
-              disabled={busy}
-              className="bg-surface border-2 border-border rounded-2xl items-center justify-center py-4 mb-6 min-h-[48px] shadow-card active:opacity-75"
-            >
-              <Text className="text-ink text-base font-medium">Continue with GitHub</Text>
-            </Pressable>
-
-            {/* Divider */}
-            <View className="flex-row items-center my-6">
-              <View className="flex-1 h-px bg-border" />
-              <Text className="text-ink-mute mx-4 text-sm">or continue with email</Text>
-              <View className="flex-1 h-px bg-border" />
-            </View>
-
             {/* Email input */}
             <Controller
               control={emailForm.control}

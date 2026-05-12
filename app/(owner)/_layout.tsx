@@ -2,10 +2,13 @@
  * @file (owner)/_layout.tsx — bottom-tab layout for the owner app.
  * @module app
  *
- * Three tabs: Machines (L4), Requests (L3), Profile.
+ * Three visible tabs: Requests, AI Helper, Profile. The owner's listings
+ * (formerly its own tab) is reached via a "My Machines" button on the
+ * Profile screen — keeps the bottom bar uncluttered and matches the
+ * renter shell's three-tab cadence.
  */
 import { Tabs } from 'expo-router';
-import { ClipboardList, Sparkles, Tractor, User } from 'lucide-react-native';
+import { ClipboardList, Sparkles, User } from 'lucide-react-native';
 
 import { colors } from '@/theme/colors';
 
@@ -24,13 +27,6 @@ export default function OwnerLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Machines',
-          tabBarIcon: ({ color }) => <Tractor size={TAB_ICON_SIZE} color={color} />,
-        }}
-      />
       <Tabs.Screen
         name="requests"
         options={{
@@ -52,7 +48,8 @@ export default function OwnerLayout() {
           tabBarIcon: ({ color }) => <User size={TAB_ICON_SIZE} color={color} />,
         }}
       />
-      {/* Hide nested route groups from the tab bar */}
+      {/* Hide all non-tab routes from the tab bar */}
+      <Tabs.Screen name="listings" options={{ href: null }} />
       <Tabs.Screen name="add-machine" options={{ href: null }} />
       <Tabs.Screen name="machine" options={{ href: null }} />
     </Tabs>

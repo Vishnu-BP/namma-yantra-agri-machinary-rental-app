@@ -32,8 +32,12 @@ export const ROUTES = {
     // L2 will add: DISCOVER, BOOKINGS, PROFILE.
   },
   OWNER: {
-    HOME: '/(owner)',
-    // L3-L4 will add: REQUESTS, ADD_MACHINE, LISTINGS.
+    // Why: owner's first visible tab is now Requests (Machines tab was
+    // removed; listings live behind a Profile-screen button). Direct the
+    // home route to /requests so the user lands on a real tab, not on
+    // the hidden /listings index.
+    HOME: '/(owner)/requests',
+    LISTINGS: '/(owner)/listings',
   },
 } as const;
 

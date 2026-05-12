@@ -37,23 +37,23 @@ function json(body: unknown, status = 200): Response {
 
 // ─── Allowed models — verified live on OpenRouter ─────────────────────────────
 
-// Why pinned: lets us reject arbitrary model strings from the client (which
-// would otherwise be a free way to test paid models if the key has credit).
-const ALLOWED_MODELS = new Set<string>([
+// Why ordered: the edge function tries each model in this order and falls
+// through to the next on rate limits / 5xx / timeouts. The client never
+// chooses a model — it just gets a reply. The first model that responds
+// wins. Order = best perceived quality first, with smaller fallbacks at
+// the end so the user always gets *some* answer.
+const FALLBACK_MODELS: string[] = [
   'meta-llama/llama-3.3-70b-instruct:free',
   'google/gemma-4-31b-it:free',
   'qwen/qwen3-next-80b-a3b-instruct:free',
   'nvidia/nemotron-3-super-120b-a12b:free',
   'openai/gpt-oss-120b:free',
-]);
-
-const DEFAULT_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
+];
 
 // ─── Body validation ──────────────────────────────────────────────────────────
 
 interface RequestBody {
   messages?: unknown;
-  model?: unknown;
 }
 
 function isValidMessage(m: unknown): m is ChatMessage {
@@ -116,10 +116,7 @@ serve(async (req: Request) => {
     return json({ error: 'messages contain invalid entries' }, 400);
   }
 
-  const requestedModel = typeof body.model === 'string' ? body.model : DEFAULT_MODEL;
-  const model = ALLOWED_MODELS.has(requestedModel) ? requestedModel : DEFAULT_MODEL;
-
-  // ── OpenRouter call ─────────────────────────────────────────────────────
+  // ── OpenRouter call with auto-fallback ─────────────────────────────────
   const apiKey = Deno.env.get('OPENROUTER_API_KEY');
   if (!apiKey) {
     console.log('[ai-chat] OPENROUTER_API_KEY not set');
@@ -131,16 +128,25 @@ serve(async (req: Request) => {
     ...(rawMessages as ChatMessage[]),
   ];
 
-  try {
-    const reply = await callOpenRouter(apiKey, model, messagesForLlm);
-    console.log(`[ai-chat] ok user=${user.id.slice(0, 8)} model=${model} reply_len=${reply.length}`);
-    return json({ reply, model });
-  } catch (err) {
-    if (err instanceof OpenRouterError) {
-      console.log(`[ai-chat] openrouter error status=${err.status} msg=${err.message}`);
-      return json({ error: err.message }, err.status >= 400 && err.status < 600 ? err.status : 502);
+  const failures: string[] = [];
+
+  for (const model of FALLBACK_MODELS) {
+    try {
+      const reply = await callOpenRouter(apiKey, model, messagesForLlm);
+      console.log(
+        `[ai-chat] ok user=${user.id.slice(0, 8)} model=${model} reply_len=${reply.length}` +
+          (failures.length ? ` (after ${failures.length} fallback${failures.length > 1 ? 's' : ''})` : ''),
+      );
+      return json({ reply });
+    } catch (err) {
+      const msg = err instanceof OpenRouterError ? `${err.status}:${err.message}` : String(err);
+      failures.push(`${model} → ${msg}`);
+      console.log(`[ai-chat] fallback: ${model} failed (${msg})`);
+      // Try the next model in the list. Fall through to next iteration.
     }
-    console.log('[ai-chat] unexpected error', err);
-    return json({ error: 'AI request failed' }, 502);
   }
+
+  // All models failed.
+  console.log(`[ai-chat] all models exhausted user=${user.id.slice(0, 8)} failures=${failures.length}`);
+  return json({ error: 'No models could respond. Please try again in a moment.' }, 503);
 });

@@ -185,6 +185,18 @@ export default function OwnerProfile() {
             </View>
           </View>
 
+          {/* ── My Machines — primary CTA, replaces the deprecated Machines tab ── */}
+          <Button
+            label={t('profile.myMachines')}
+            onPress={() => {
+              log.info('OwnerProfile: my-machines tapped');
+              router.push('/(owner)/listings' as Parameters<typeof router.push>[0]);
+            }}
+            variant="primary"
+            icon={Tractor}
+            className="mb-3"
+          />
+
           {/* ── Sign out (ghost) ── */}
           <Button
             label={t('profile.signOut')}

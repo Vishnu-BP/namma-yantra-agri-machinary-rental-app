@@ -146,7 +146,7 @@ export default function AddMachinePricing() {
       });
       log.info('Add machine pricing: machine published');
       store.reset();
-      router.replace('/(owner)');
+      router.replace('/(owner)/listings' as Parameters<typeof router.replace>[0]);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Something went wrong.';
       log.error('Add machine pricing: publish failed', err);

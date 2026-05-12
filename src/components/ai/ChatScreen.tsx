@@ -7,9 +7,8 @@
  * `ai-chat` edge function via the `ai` integration namespace; surfaces a
  * typing indicator while pending and a toast on error.
  *
- * The model picker lives at the top — switching mid-conversation just
- * changes which model handles the *next* message; prior context still
- * gets forwarded.
+ * Model selection is server-side and opaque: the edge function tries 5
+ * free models in fallback order and returns whichever responds first.
  */
 import { LinearGradient } from 'expo-linear-gradient';
 import { Sparkles } from 'lucide-react-native';
@@ -21,10 +20,9 @@ import { toast } from 'sonner-native';
 
 import { ChatInput } from '@/components/ai/ChatInput';
 import { ChatMessage } from '@/components/ai/ChatMessage';
-import { ModelPicker } from '@/components/ai/ModelPicker';
 import { TypingIndicator } from '@/components/ai/TypingIndicator';
 import { ai } from '@/integrations/supabase';
-import { DEFAULT_MODEL_ID, type ChatMessage as ChatMsg } from '@/integrations/supabase/ai';
+import type { ChatMessage as ChatMsg } from '@/integrations/supabase/ai';
 import { createLogger } from '@/lib/logger';
 import { colors } from '@/theme/colors';
 
@@ -38,7 +36,6 @@ interface ChatScreenProps {
 export function ChatScreen({ pageTag }: ChatScreenProps) {
   const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMsg[]>([]);
-  const [model, setModel] = useState<string>(DEFAULT_MODEL_ID);
   const [pending, setPending] = useState(false);
   const listRef = useRef<FlatList<ChatMsg>>(null);
 
@@ -48,14 +45,14 @@ export function ChatScreen({ pageTag }: ChatScreenProps) {
 
   const handleSend = useCallback(
     async (text: string) => {
-      log.info(`${pageTag}: send tapped`, { len: text.length, model });
+      log.info(`${pageTag}: send tapped`, { len: text.length });
       const next: ChatMsg[] = [...messages, { role: 'user', content: text }];
       setMessages(next);
       setPending(true);
 
       try {
-        const { reply, model: usedModel } = await ai.chat(next, model);
-        log.info(`${pageTag}: reply received`, { model: usedModel, len: reply.length });
+        const { reply } = await ai.chat(next);
+        log.info(`${pageTag}: reply received`, { len: reply.length });
         setMessages([...next, { role: 'assistant', content: reply }]);
       } catch (err) {
         log.error(`${pageTag}: chat failed`, err);
@@ -66,13 +63,8 @@ export function ChatScreen({ pageTag }: ChatScreenProps) {
         setPending(false);
       }
     },
-    [messages, model, pageTag, t],
+    [messages, pageTag, t],
   );
-
-  const handleSelectModel = (id: string) => {
-    log.info(`${pageTag}: model switched`, { model: id });
-    setModel(id);
-  };
 
   // Auto-scroll to the newest message whenever messages or pending change.
   useEffect(() => {
@@ -112,13 +104,6 @@ export function ChatScreen({ pageTag }: ChatScreenProps) {
             </Text>
           </View>
         </LinearGradient>
-
-        {/* ── Model picker ── */}
-        <ModelPicker
-          selected={model}
-          onSelect={handleSelectModel}
-          disabled={pending}
-        />
 
         {/* ── Message list ── */}
         {messages.length === 0 ? (
